@@ -4,6 +4,7 @@ import helmet from 'helmet'
 import morgan from 'morgan'
 import dotenv from 'dotenv'
 import rateLimit from 'express-rate-limit'
+import path from 'path'
 
 import authRoutes from './routes/auth'
 import farmerRoutes from './routes/farmers'
@@ -56,6 +57,15 @@ app.use('/api/v1/audit', auditRoutes)
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'CarbonSmart API', version: '1.0.0' })
+})
+
+/* Serve frontend static files */
+const clientBuildPath = path.join(__dirname, '../..', 'client', 'dist')
+app.use(express.static(clientBuildPath))
+
+/* SPA fallback: serve index.html for all non-API routes */
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(clientBuildPath, 'index.html'))
 })
 
 app.use(errorHandler)

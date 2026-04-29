@@ -3,7 +3,7 @@ services:
     name: carbonsmart-backend
     runtime: node
     region: oregon
-    buildCommand: npm install && npm run build --prefix server && npm run build --prefix client
+    buildCommand: npm install --prefix client && npm run build --prefix client && npm install --prefix server && npm run build --prefix server
     startCommand: npm start --prefix server
     envVars:
       - key: NODE_ENV

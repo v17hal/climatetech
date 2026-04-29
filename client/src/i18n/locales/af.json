@@ -1,0 +1,132 @@
+{
+  "nav": {
+    "dashboard": "Kontroleskerm",
+    "farmers": "Boere",
+    "carbon": "Koolstofopsporing",
+    "mapping": "Plaaskaart",
+    "lsm": "LSM-profiele",
+    "irrigation": "Besproeiing",
+    "pest": "Plae en Siektes",
+    "weather": "Weer",
+    "inventory": "Voorraad",
+    "financials": "Finansies",
+    "analytics": "Analise",
+    "auditLog": "Ouditrekord",
+    "settings": "Instellings",
+    "help": "Hulp",
+    "logout": "Meld af"
+  },
+  "common": {
+    "save": "Stoor",
+    "cancel": "Kanselleer",
+    "edit": "Wysig",
+    "delete": "Skrap",
+    "add": "Voeg by",
+    "search": "Soek",
+    "filter": "Filter",
+    "export": "Voer uit",
+    "loading": "Laai tans...",
+    "noData": "Geen data gevind nie",
+    "viewAll": "Sien alles",
+    "back": "Terug",
+    "confirm": "Bevestig",
+    "close": "Sluit",
+    "submit": "Dien in",
+    "required": "Vereis",
+    "optional": "Opsioneel"
+  },
+  "auth": {
+    "login": "Meld aan",
+    "register": "Registreer nou",
+    "logout": "Meld af",
+    "email": "E-posadres",
+    "password": "Wagwoord",
+    "forgotPassword": "Wagwoord vergeet?",
+    "rememberMe": "Onthou my",
+    "welcomeBack": "Welkom terug",
+    "signInSubtitle": "Meld aan by jou rekening om voort te gaan",
+    "tagline": "Klimaatoplossings Gewortel in Afrika se Grond"
+  },
+  "dashboard": {
+    "title": "Kontroleskerm",
+    "subtitle": "Klimaatoplossings Gewortel in Afrika se Grond",
+    "welcomeMessage": "Goeie môre",
+    "farmersEnrolled": "Boere Ingeskryf",
+    "carbonTracked": "Koolstof Opgespoor",
+    "activeFarms": "Aktiewe Plase",
+    "complianceRate": "Nakomingskoers",
+    "recentEnrollments": "Onlangse Inskrywings",
+    "liveActivity": "Lewendige Aktiwiteit",
+    "vsLastMonth": "vs verlede maand"
+  },
+  "farmers": {
+    "title": "Boere",
+    "enroll": "Skryf Boer in",
+    "farmerId": "Boer-ID",
+    "farmName": "Plaasnaam",
+    "province": "Provinsie",
+    "district": "Distrik",
+    "farmSize": "Plaasgrootte",
+    "cropTypes": "Gewastipes",
+    "practices": "Boerderymetodes",
+    "status": {
+      "active": "Aktief",
+      "pending": "Hangende",
+      "inactive": "Onaktief"
+    },
+    "enrolled": "Ingeskryf",
+    "totalFarmers": "Totale Boere"
+  },
+  "carbon": {
+    "title": "Koolstofopsporing",
+    "addReading": "Voeg Lesing by",
+    "carbonLevel": "Koolstofvlak",
+    "soilPH": "Grond-pH",
+    "organicMatter": "Organiese Materie",
+    "moisture": "Vog",
+    "method": {
+      "manual": "Handmatig",
+      "sensor": "Sensor"
+    },
+    "compliance": "Nakoming",
+    "eligible": "Kwalifiseer",
+    "underReview": "Onder Hersiening",
+    "nonCompliant": "Nie-nakoming"
+  },
+  "lsm": {
+    "title": "LSM-profiele",
+    "score": "Gradeer 'n Plaas",
+    "categories": {
+      "LSM1": "Bestaansboerdery",
+      "LSM2": "Opkomend",
+      "LSM3": "Ontwikkelend",
+      "LSM4": "Gevestig",
+      "LSM5": "Kommersieel"
+    }
+  },
+  "settings": {
+    "title": "Instellings",
+    "profile": "Profiel",
+    "security": "Sekuriteit",
+    "notifications": "Kennisgewings",
+    "platform": "Platform",
+    "appearance": "Voorkoms",
+    "language": "Taal",
+    "timezone": "Tydsone",
+    "currency": "Geldeenheid",
+    "saveProfile": "Stoor Profiel",
+    "changePassword": "Verander Wagwoord"
+  },
+  "help": {
+    "title": "Hulp en Ondersteuning",
+    "searchPlaceholder": "Soek GVV's, gidse en dokumentasie...",
+    "contactSupport": "Kontak Ondersteuning",
+    "sendMessage": "Stuur Boodskap"
+  },
+  "offline": {
+    "offlineMessage": "Jy is vanlyn. Data word gesinkroniseer wanneer verbinding herstel word.",
+    "syncPending": "Sinkroniseer {{count}} hangende rekords",
+    "syncing": "Sinkroniseer...",
+    "synced": "Suksesvol gesinkroniseer"
+  }
+}

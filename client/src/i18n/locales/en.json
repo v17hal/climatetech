@@ -1,0 +1,132 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "farmers": "Farmers",
+    "carbon": "Carbon Tracking",
+    "mapping": "Farm Map",
+    "lsm": "LSM Profiles",
+    "irrigation": "Irrigation",
+    "pest": "Pest & Disease",
+    "weather": "Weather",
+    "inventory": "Inventory",
+    "financials": "Financials",
+    "analytics": "Analytics",
+    "auditLog": "Audit Log",
+    "settings": "Settings",
+    "help": "Help",
+    "logout": "Log Out"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "loading": "Loading...",
+    "noData": "No data found",
+    "viewAll": "View all",
+    "back": "Back",
+    "confirm": "Confirm",
+    "close": "Close",
+    "submit": "Submit",
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Enroll Now",
+    "logout": "Log Out",
+    "email": "Email Address",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "rememberMe": "Remember me",
+    "welcomeBack": "Welcome back",
+    "signInSubtitle": "Sign in to your account to continue",
+    "tagline": "Climate Solutions Rooted in African Soil"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Climate Solutions Rooted in African Soil",
+    "welcomeMessage": "Good morning",
+    "farmersEnrolled": "Farmers Enrolled",
+    "carbonTracked": "Carbon Tracked",
+    "activeFarms": "Active Farms",
+    "complianceRate": "Compliance Rate",
+    "recentEnrollments": "Recent Enrollments",
+    "liveActivity": "Live Activity",
+    "vsLastMonth": "vs last month"
+  },
+  "farmers": {
+    "title": "Farmers",
+    "enroll": "Enroll Farmer",
+    "farmerId": "Farmer ID",
+    "farmName": "Farm Name",
+    "province": "Province",
+    "district": "District",
+    "farmSize": "Farm Size",
+    "cropTypes": "Crop Types",
+    "practices": "Farming Practices",
+    "status": {
+      "active": "Active",
+      "pending": "Pending",
+      "inactive": "Inactive"
+    },
+    "enrolled": "Enrolled",
+    "totalFarmers": "Total Farmers"
+  },
+  "carbon": {
+    "title": "Carbon Tracking",
+    "addReading": "Add Reading",
+    "carbonLevel": "Carbon Level",
+    "soilPH": "Soil pH",
+    "organicMatter": "Organic Matter",
+    "moisture": "Moisture",
+    "method": {
+      "manual": "Manual",
+      "sensor": "Sensor"
+    },
+    "compliance": "Compliance",
+    "eligible": "Eligible",
+    "underReview": "Under Review",
+    "nonCompliant": "Non-Compliant"
+  },
+  "lsm": {
+    "title": "LSM Profiles",
+    "score": "Score a Farm",
+    "categories": {
+      "LSM1": "Subsistence",
+      "LSM2": "Emerging",
+      "LSM3": "Developing",
+      "LSM4": "Established",
+      "LSM5": "Commercial"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "security": "Security",
+    "notifications": "Notifications",
+    "platform": "Platform",
+    "appearance": "Appearance",
+    "language": "Language",
+    "timezone": "Timezone",
+    "currency": "Currency",
+    "saveProfile": "Save Profile",
+    "changePassword": "Update Password"
+  },
+  "help": {
+    "title": "Help & Support",
+    "searchPlaceholder": "Search FAQs, guides, and documentation...",
+    "contactSupport": "Contact Support",
+    "sendMessage": "Send Message"
+  },
+  "offline": {
+    "offlineMessage": "You are offline. Data will sync when connection is restored.",
+    "syncPending": "Sync {{count}} pending records",
+    "syncing": "Syncing...",
+    "synced": "Synced successfully"
+  }
+}

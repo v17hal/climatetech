@@ -1,0 +1,132 @@
+{
+  "nav": {
+    "dashboard": "Ikhasi Elikhulu",
+    "farmers": "Abalimi",
+    "carbon": "Ukulandelela Ikhabhoni",
+    "mapping": "Imephu Yepulazi",
+    "lsm": "Amaprofile e-LSM",
+    "irrigation": "Ukuphilisa",
+    "pest": "Izinambuzane Nezifo",
+    "weather": "Isimo Sezulu",
+    "inventory": "Uhlu Lwezimpahla",
+    "financials": "Izimali",
+    "analytics": "Ukuhlaziya",
+    "auditLog": "Irejista Yokubheka",
+    "settings": "Izilungiselelo",
+    "help": "Usizo",
+    "logout": "Phuma"
+  },
+  "common": {
+    "save": "Londoloza",
+    "cancel": "Khansela",
+    "edit": "Hlela",
+    "delete": "Susa",
+    "add": "Engeza",
+    "search": "Sesha",
+    "filter": "Hlunga",
+    "export": "Thumela Ngaphandle",
+    "loading": "Iyalayisha...",
+    "noData": "Ayikho idatha",
+    "viewAll": "Bona konke",
+    "back": "Emuva",
+    "confirm": "Qinisekisa",
+    "close": "Vala",
+    "submit": "Thumela",
+    "required": "Kuyadingeka",
+    "optional": "Ukukhetha"
+  },
+  "auth": {
+    "login": "Ngena",
+    "register": "Bhalisa Manje",
+    "logout": "Phuma",
+    "email": "Ikheli le-imeyili",
+    "password": "Iphasiwedi",
+    "forgotPassword": "Ukhohlwe iphasiwedi?",
+    "rememberMe": "Ngikhumbule",
+    "welcomeBack": "Wamukelekile futhi",
+    "signInSubtitle": "Ngena ku-akhawunti yakho uqhubeke",
+    "tagline": "Izixazululo Zezulu Ezinemilande Emhlabathini Wase-Afrika"
+  },
+  "dashboard": {
+    "title": "Ikhasi Elikhulu",
+    "subtitle": "Izixazululo Zezulu Ezinemilande Emhlabathini Wase-Afrika",
+    "welcomeMessage": "Sawubona ekuseni",
+    "farmersEnrolled": "Abalimi Ababhalisile",
+    "carbonTracked": "Ikhabhoni Elandelwayo",
+    "activeFarms": "Amapulazi Asebenzayo",
+    "complianceRate": "Izinga Lokufaneleka",
+    "recentEnrollments": "Ukubhalisa Kwamuva",
+    "liveActivity": "Umsebenzi Wamanje",
+    "vsLastMonth": "vs inyanga edlule"
+  },
+  "farmers": {
+    "title": "Abalimi",
+    "enroll": "Bhalisa Umlimi",
+    "farmerId": "ID Yomlimi",
+    "farmName": "Igama Lepulazi",
+    "province": "Isifundazwe",
+    "district": "Isifunda",
+    "farmSize": "Ubukhulu Bepulazi",
+    "cropTypes": "Izinhlobo Zezitshalo",
+    "practices": "Izindlela Zokulima",
+    "status": {
+      "active": "Isebenza",
+      "pending": "Ilindile",
+      "inactive": "Ayisebenzi"
+    },
+    "enrolled": "Ibhaliselwe",
+    "totalFarmers": "Abalimi Bonke"
+  },
+  "carbon": {
+    "title": "Ukulandelela Ikhabhoni",
+    "addReading": "Engeza Ukufunda",
+    "carbonLevel": "Izinga Leikhabhoni",
+    "soilPH": "i-pH Yomhlabathi",
+    "organicMatter": "Into Ephilayo",
+    "moisture": "Unyaka",
+    "method": {
+      "manual": "Ngesandla",
+      "sensor": "I-Sensor"
+    },
+    "compliance": "Ukufaneleka",
+    "eligible": "Kufanelekile",
+    "underReview": "Iyahlolwa",
+    "nonCompliant": "Ayifaneleki"
+  },
+  "lsm": {
+    "title": "Amaprofile e-LSM",
+    "score": "Bala Ipulazi",
+    "categories": {
+      "LSM1": "Ukuziphilisa",
+      "LSM2": "Iyakhula",
+      "LSM3": "Ithuthuka",
+      "LSM4": "Isimile",
+      "LSM5": "Inzuzo"
+    }
+  },
+  "settings": {
+    "title": "Izilungiselelo",
+    "profile": "Iphrofayili",
+    "security": "Ukuphepha",
+    "notifications": "Izaziso",
+    "platform": "Inkundla",
+    "appearance": "Ukubukeka",
+    "language": "Ulimi",
+    "timezone": "Isikhathi",
+    "currency": "Imali",
+    "saveProfile": "Londoloza Iphrofayili",
+    "changePassword": "Shintsha Iphasiwedi"
+  },
+  "help": {
+    "title": "Usizo Nosekelo",
+    "searchPlaceholder": "Sesha imibuzo, iziqondiso...",
+    "contactSupport": "Xhumana Nosizo",
+    "sendMessage": "Thumela Umlayezo"
+  },
+  "offline": {
+    "offlineMessage": "Awukho ku-inthanethi. Idatha izohambelana uma uxhunyiwe.",
+    "syncPending": "Hambelana {{count}} amarekhodi alindile",
+    "syncing": "Iyahambelana...",
+    "synced": "Ihambelene kahle"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "farmers": "Agriculteurs",
+    "carbon": "Suivi Carbone",
+    "mapping": "Carte des Fermes",
+    "lsm": "Profils LSM",
+    "irrigation": "Irrigation",
+    "pest": "Ravageurs et Maladies",
+    "weather": "Météo",
+    "inventory": "Inventaire",
+    "financials": "Finances",
+    "analytics": "Analytique",
+    "auditLog": "Journal d'audit",
+    "settings": "Paramètres",
+    "help": "Aide",
+    "logout": "Se déconnecter"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "add": "Ajouter",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "loading": "Chargement...",
+    "noData": "Aucune donnée trouvée",
+    "viewAll": "Voir tout",
+    "back": "Retour",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "submit": "Soumettre",
+    "required": "Requis",
+    "optional": "Facultatif"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "logout": "Se déconnecter",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié?",
+    "rememberMe": "Se souvenir de moi",
+    "welcomeBack": "Bon retour",
+    "signInSubtitle": "Connectez-vous à votre compte pour continuer",
+    "tagline": "Solutions Climatiques Enracinées dans le Sol Africain"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "subtitle": "Solutions Climatiques Enracinées dans le Sol Africain",
+    "welcomeMessage": "Bonjour",
+    "farmersEnrolled": "Agriculteurs Inscrits",
+    "carbonTracked": "Carbone Suivi",
+    "activeFarms": "Fermes Actives",
+    "complianceRate": "Taux de Conformité",
+    "recentEnrollments": "Inscriptions Récentes",
+    "liveActivity": "Activité en Direct",
+    "vsLastMonth": "vs mois dernier"
+  },
+  "farmers": {
+    "title": "Agriculteurs",
+    "enroll": "Inscrire un Agriculteur",
+    "farmerId": "ID Agriculteur",
+    "farmName": "Nom de la Ferme",
+    "province": "Province",
+    "district": "District",
+    "farmSize": "Taille de la Ferme",
+    "cropTypes": "Types de Cultures",
+    "practices": "Pratiques Agricoles",
+    "status": {
+      "active": "Actif",
+      "pending": "En attente",
+      "inactive": "Inactif"
+    },
+    "enrolled": "Inscrit",
+    "totalFarmers": "Total Agriculteurs"
+  },
+  "carbon": {
+    "title": "Suivi Carbone",
+    "addReading": "Ajouter une Lecture",
+    "carbonLevel": "Niveau de Carbone",
+    "soilPH": "pH du Sol",
+    "organicMatter": "Matière Organique",
+    "moisture": "Humidité",
+    "method": {
+      "manual": "Manuel",
+      "sensor": "Capteur"
+    },
+    "compliance": "Conformité",
+    "eligible": "Éligible",
+    "underReview": "En Révision",
+    "nonCompliant": "Non Conforme"
+  },
+  "lsm": {
+    "title": "Profils LSM",
+    "score": "Évaluer une Ferme",
+    "categories": {
+      "LSM1": "Subsistance",
+      "LSM2": "Émergent",
+      "LSM3": "En développement",
+      "LSM4": "Établi",
+      "LSM5": "Commercial"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "profile": "Profil",
+    "security": "Sécurité",
+    "notifications": "Notifications",
+    "platform": "Plateforme",
+    "appearance": "Apparence",
+    "language": "Langue",
+    "timezone": "Fuseau horaire",
+    "currency": "Devise",
+    "saveProfile": "Enregistrer le Profil",
+    "changePassword": "Changer le Mot de Passe"
+  },
+  "help": {
+    "title": "Aide et Support",
+    "searchPlaceholder": "Rechercher FAQ, guides et documentation...",
+    "contactSupport": "Contacter le Support",
+    "sendMessage": "Envoyer un Message"
+  },
+  "offline": {
+    "offlineMessage": "Vous êtes hors ligne. Les données seront synchronisées lorsque la connexion sera rétablie.",
+    "syncPending": "Synchroniser {{count}} enregistrements en attente",
+    "syncing": "Synchronisation...",
+    "synced": "Synchronisé avec succès"
+  }
+}

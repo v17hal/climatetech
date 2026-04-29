@@ -1,0 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-cyan-brand: #40BBB9;
+  --color-green-brand: #98CF59;
+  --color-azure: #22B3DB;
+  --color-green-secondary: #66C390;
+  --color-blue-brand: #336599;
+  --color-dark-blue: #06192C;
+  --color-green-alt: #A5D34B;
+  --color-azure-light: #70C3E8;
+  --color-vivid-azure: #05AEF9;
+  --color-vivid-green: #C1E67A;
+  --color-surface: #F4F8F6;
+  --font-sans: 'Montserrat', 'Arial', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Montserrat', 'Arial', sans-serif;
+  background-color: #F4F8F6;
+  color: #06192C;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root { width: 100%; min-height: 100vh; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #66C390; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #40BBB9; }

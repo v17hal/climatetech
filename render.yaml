@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: carbonsmart-backend
+    runtime: node
+    region: oregon
+    buildCommand: npm install && npm run build --prefix server && npm run build --prefix client
+    startCommand: npm start --prefix server
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        scope: run
+        value: # ADD YOUR DATABASE_URL HERE
+      - key: JWT_SECRET
+        scope: run
+        value: # ADD YOUR JWT_SECRET HERE
+      - key: PORT
+        value: "3001"

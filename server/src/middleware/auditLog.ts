@@ -25,6 +25,8 @@ export function auditMiddleware(req: AuthRequest, res: Response, next: NextFunct
   res.on('finish', () => {
     if (!req.userId) { next(); return }
 
+    const ipAddress = Array.isArray(req.ip) ? req.ip[0] : (req.ip ?? 'unknown')
+
     const entry: AuditEntry = {
       id: crypto.randomUUID(),
       userId: req.userId ?? 'anonymous',
@@ -35,7 +37,7 @@ export function auditMiddleware(req: AuthRequest, res: Response, next: NextFunct
       method: req.method,
       path: req.path,
       statusCode: res.statusCode,
-      ip: req.ip ?? 'unknown',
+      ip: ipAddress,
       timestamp: new Date().toISOString(),
       durationMs: Date.now() - start,
     }

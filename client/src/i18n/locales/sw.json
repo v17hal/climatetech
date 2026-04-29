@@ -1,0 +1,132 @@
+{
+  "nav": {
+    "dashboard": "Dashibodi",
+    "farmers": "Wakulima",
+    "carbon": "Ufuatiliaji wa Kaboni",
+    "mapping": "Ramani ya Shamba",
+    "lsm": "Maelezo ya LSM",
+    "irrigation": "Umwagiliaji",
+    "pest": "Wadudu na Magonjwa",
+    "weather": "Hali ya Hewa",
+    "inventory": "Orodha ya Mali",
+    "financials": "Fedha",
+    "analytics": "Uchambuzi",
+    "auditLog": "Kumbukumbu ya Ukaguzi",
+    "settings": "Mipangilio",
+    "help": "Msaada",
+    "logout": "Ondoka"
+  },
+  "common": {
+    "save": "Hifadhi",
+    "cancel": "Ghairi",
+    "edit": "Hariri",
+    "delete": "Futa",
+    "add": "Ongeza",
+    "search": "Tafuta",
+    "filter": "Chuja",
+    "export": "Hamisha Nje",
+    "loading": "Inapakia...",
+    "noData": "Hakuna data iliyopatikana",
+    "viewAll": "Tazama yote",
+    "back": "Rudi",
+    "confirm": "Thibitisha",
+    "close": "Funga",
+    "submit": "Wasilisha",
+    "required": "Inahitajika",
+    "optional": "Hiari"
+  },
+  "auth": {
+    "login": "Ingia",
+    "register": "Jisajili Sasa",
+    "logout": "Ondoka",
+    "email": "Anwani ya barua pepe",
+    "password": "Nywila",
+    "forgotPassword": "Umesahau nywila?",
+    "rememberMe": "Nikikumbuke",
+    "welcomeBack": "Karibu tena",
+    "signInSubtitle": "Ingia kwenye akaunti yako ili kuendelea",
+    "tagline": "Suluhisho za Hali ya Hewa Zilizozikita Kwenye Udongo wa Afrika"
+  },
+  "dashboard": {
+    "title": "Dashibodi",
+    "subtitle": "Suluhisho za Hali ya Hewa Zilizozikita Kwenye Udongo wa Afrika",
+    "welcomeMessage": "Habari za asubuhi",
+    "farmersEnrolled": "Wakulima Waliojisajili",
+    "carbonTracked": "Kaboni Inayofuatiliwa",
+    "activeFarms": "Mashamba Yanayofanya Kazi",
+    "complianceRate": "Kiwango cha Ufuataji",
+    "recentEnrollments": "Usajili wa Hivi Karibuni",
+    "liveActivity": "Shughuli ya Moja kwa Moja",
+    "vsLastMonth": "vs mwezi uliopita"
+  },
+  "farmers": {
+    "title": "Wakulima",
+    "enroll": "Sajili Mkulima",
+    "farmerId": "Kitambulisho cha Mkulima",
+    "farmName": "Jina la Shamba",
+    "province": "Mkoa",
+    "district": "Wilaya",
+    "farmSize": "Ukubwa wa Shamba",
+    "cropTypes": "Aina za Mazao",
+    "practices": "Mbinu za Kilimo",
+    "status": {
+      "active": "Inafanya Kazi",
+      "pending": "Inasubiri",
+      "inactive": "Haifanyi Kazi"
+    },
+    "enrolled": "Imesajiliwa",
+    "totalFarmers": "Jumla ya Wakulima"
+  },
+  "carbon": {
+    "title": "Ufuatiliaji wa Kaboni",
+    "addReading": "Ongeza Usomaji",
+    "carbonLevel": "Kiwango cha Kaboni",
+    "soilPH": "pH ya Udongo",
+    "organicMatter": "Viumbe Hai",
+    "moisture": "Unyevunyevu",
+    "method": {
+      "manual": "Kwa Mkono",
+      "sensor": "Sensor"
+    },
+    "compliance": "Ufuataji",
+    "eligible": "Anastahili",
+    "underReview": "Inakaguliwa",
+    "nonCompliant": "Hafuati"
+  },
+  "lsm": {
+    "title": "Maelezo ya LSM",
+    "score": "Tathmini Shamba",
+    "categories": {
+      "LSM1": "Kujikimu",
+      "LSM2": "Inayochipuka",
+      "LSM3": "Inayoendelea",
+      "LSM4": "Iliyoimara",
+      "LSM5": "Biashara"
+    }
+  },
+  "settings": {
+    "title": "Mipangilio",
+    "profile": "Wasifu",
+    "security": "Usalama",
+    "notifications": "Arifa",
+    "platform": "Jukwaa",
+    "appearance": "Mwonekano",
+    "language": "Lugha",
+    "timezone": "Eneo la Wakati",
+    "currency": "Sarafu",
+    "saveProfile": "Hifadhi Wasifu",
+    "changePassword": "Badilisha Nywila"
+  },
+  "help": {
+    "title": "Msaada na Usaidizi",
+    "searchPlaceholder": "Tafuta Maswali, miongozo na hati...",
+    "contactSupport": "Wasiliana na Usaidizi",
+    "sendMessage": "Tuma Ujumbe"
+  },
+  "offline": {
+    "offlineMessage": "Uko nje ya mtandao. Data itasawazishwa wakati muunganisho utarejeshwa.",
+    "syncPending": "Sawazisha rekodi {{count}} zinazosubiri",
+    "syncing": "Inasawazisha...",
+    "synced": "Imesawazishwa kwa mafanikio"
+  }
+}

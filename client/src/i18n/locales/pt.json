@@ -1,0 +1,132 @@
+{
+  "nav": {
+    "dashboard": "Painel",
+    "farmers": "Agricultores",
+    "carbon": "Rastreamento de Carbono",
+    "mapping": "Mapa da Fazenda",
+    "lsm": "Perfis LSM",
+    "irrigation": "Irrigação",
+    "pest": "Pragas e Doenças",
+    "weather": "Clima",
+    "inventory": "Inventário",
+    "financials": "Finanças",
+    "analytics": "Análises",
+    "auditLog": "Registro de Auditoria",
+    "settings": "Configurações",
+    "help": "Ajuda",
+    "logout": "Sair"
+  },
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "add": "Adicionar",
+    "search": "Pesquisar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "loading": "Carregando...",
+    "noData": "Nenhum dado encontrado",
+    "viewAll": "Ver tudo",
+    "back": "Voltar",
+    "confirm": "Confirmar",
+    "close": "Fechar",
+    "submit": "Enviar",
+    "required": "Obrigatório",
+    "optional": "Opcional"
+  },
+  "auth": {
+    "login": "Entrar",
+    "register": "Registrar agora",
+    "logout": "Sair",
+    "email": "Endereço de e-mail",
+    "password": "Senha",
+    "forgotPassword": "Esqueceu a senha?",
+    "rememberMe": "Lembrar de mim",
+    "welcomeBack": "Bem-vindo de volta",
+    "signInSubtitle": "Entre na sua conta para continuar",
+    "tagline": "Soluções Climáticas Enraizadas no Solo Africano"
+  },
+  "dashboard": {
+    "title": "Painel",
+    "subtitle": "Soluções Climáticas Enraizadas no Solo Africano",
+    "welcomeMessage": "Bom dia",
+    "farmersEnrolled": "Agricultores Inscritos",
+    "carbonTracked": "Carbono Rastreado",
+    "activeFarms": "Fazendas Ativas",
+    "complianceRate": "Taxa de Conformidade",
+    "recentEnrollments": "Inscrições Recentes",
+    "liveActivity": "Atividade ao Vivo",
+    "vsLastMonth": "vs mês passado"
+  },
+  "farmers": {
+    "title": "Agricultores",
+    "enroll": "Inscrever Agricultor",
+    "farmerId": "ID do Agricultor",
+    "farmName": "Nome da Fazenda",
+    "province": "Província",
+    "district": "Distrito",
+    "farmSize": "Tamanho da Fazenda",
+    "cropTypes": "Tipos de Culturas",
+    "practices": "Práticas Agrícolas",
+    "status": {
+      "active": "Ativo",
+      "pending": "Pendente",
+      "inactive": "Inativo"
+    },
+    "enrolled": "Inscrito",
+    "totalFarmers": "Total de Agricultores"
+  },
+  "carbon": {
+    "title": "Rastreamento de Carbono",
+    "addReading": "Adicionar Leitura",
+    "carbonLevel": "Nível de Carbono",
+    "soilPH": "pH do Solo",
+    "organicMatter": "Matéria Orgânica",
+    "moisture": "Umidade",
+    "method": {
+      "manual": "Manual",
+      "sensor": "Sensor"
+    },
+    "compliance": "Conformidade",
+    "eligible": "Elegível",
+    "underReview": "Em Revisão",
+    "nonCompliant": "Não Conforme"
+  },
+  "lsm": {
+    "title": "Perfis LSM",
+    "score": "Avaliar Fazenda",
+    "categories": {
+      "LSM1": "Subsistência",
+      "LSM2": "Emergente",
+      "LSM3": "Em Desenvolvimento",
+      "LSM4": "Estabelecido",
+      "LSM5": "Comercial"
+    }
+  },
+  "settings": {
+    "title": "Configurações",
+    "profile": "Perfil",
+    "security": "Segurança",
+    "notifications": "Notificações",
+    "platform": "Plataforma",
+    "appearance": "Aparência",
+    "language": "Idioma",
+    "timezone": "Fuso Horário",
+    "currency": "Moeda",
+    "saveProfile": "Salvar Perfil",
+    "changePassword": "Alterar Senha"
+  },
+  "help": {
+    "title": "Ajuda e Suporte",
+    "searchPlaceholder": "Pesquisar FAQs, guias e documentação...",
+    "contactSupport": "Contatar Suporte",
+    "sendMessage": "Enviar Mensagem"
+  },
+  "offline": {
+    "offlineMessage": "Você está offline. Os dados serão sincronizados quando a conexão for restaurada.",
+    "syncPending": "Sincronizar {{count}} registros pendentes",
+    "syncing": "Sincronizando...",
+    "synced": "Sincronizado com sucesso"
+  }
+}

@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("farmer")
+  farmer    Farmer?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Farmer {
+  id               String  @id @default(cuid())
+  farmerId         String  @unique
+  userId           String  @unique
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone            String
+  nationalId       String  @unique
+  farmName         String
+  farmSize         Float
+  farmSizeUnit     String  @default("ha")
+  province         String
+  district         String
+  cropTypes        String  @default("[]")
+  farmingPractices String  @default("[]")
+  latitude         Float?
+  longitude        Float?
+  lsmScore         Int?
+  lsmCategory      String?
+  status           String  @default("pending")
+  carbonRecords    CarbonRecord[]
+  alerts           Alert[]
+  inventoryItems   InventoryItem[]
+  irrigationLogs   IrrigationLog[]
+  pestReports      PestReport[]
+  financialRecords FinancialRecord[]
+  enrolledAt       DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model CarbonRecord {
+  id            String   @id @default(cuid())
+  farmerId      String
+  farmer        Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  date          DateTime
+  carbonLevel   Float
+  soilPH        Float
+  organicMatter Float
+  moisture      Float
+  inputMethod   String   @default("manual")
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+model IrrigationLog {
+  id        String   @id @default(cuid())
+  farmerId  String
+  farmer    Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  date      DateTime
+  waterUsed Float
+  unit      String   @default("litres")
+  method    String
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+model PestReport {
+  id           String   @id @default(cuid())
+  farmerId     String
+  farmer       Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  pestName     String
+  severity     String
+  affectedArea Float
+  reportedAt   DateTime @default(now())
+  remedy       String?
+  resolved     Boolean  @default(false)
+}
+
+model InventoryItem {
+  id           String   @id @default(cuid())
+  farmerId     String
+  farmer       Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  name         String
+  category     String
+  quantity     Float
+  unit         String
+  reorderLevel Float
+  lastUpdated  DateTime @updatedAt
+  createdAt    DateTime @default(now())
+}
+
+model FinancialRecord {
+  id          String   @id @default(cuid())
+  farmerId    String
+  farmer      Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  type        String
+  amount      Float
+  currency    String   @default("ZAR")
+  description String
+  date        DateTime
+  createdAt   DateTime @default(now())
+}
+
+model Alert {
+  id        String   @id @default(cuid())
+  farmerId  String?
+  farmer    Farmer?  @relation(fields: [farmerId], references: [id], onDelete: SetNull)
+  type      String
+  severity  String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

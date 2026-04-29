@@ -25,7 +25,8 @@ export function auditMiddleware(req: AuthRequest, res: Response, next: NextFunct
   res.on('finish', () => {
     if (!req.userId) { next(); return }
 
-    const ipAddress = Array.isArray(req.ip) ? req.ip[0] : (req.ip ?? 'unknown')
+    const ipAddress: string = Array.isArray(req.ip) ? req.ip[0] : (req.ip || 'unknown')
+    const resourceId: string | undefined = Array.isArray(req.params?.id) ? req.params.id[0] : req.params?.id
 
     const entry: AuditEntry = {
       id: crypto.randomUUID(),
@@ -33,7 +34,7 @@ export function auditMiddleware(req: AuthRequest, res: Response, next: NextFunct
       userRole: req.userRole ?? 'unknown',
       action: resolveAction(req.method, req.path),
       resource: resolveResource(req.path),
-      resourceId: req.params?.id,
+      resourceId,
       method: req.method,
       path: req.path,
       statusCode: res.statusCode,

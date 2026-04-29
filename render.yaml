@@ -14,5 +14,3 @@ services:
       - key: JWT_SECRET
         scope: run
         value: # ADD YOUR JWT_SECRET HERE
-      - key: PORT
-        value: "3001"

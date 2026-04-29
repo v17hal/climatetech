@@ -58,7 +58,7 @@ app.get('/api/health', (_req, res) => {
 const clientBuildPath = path_1.default.join(__dirname, '../..', 'client', 'dist');
 app.use(express_1.default.static(clientBuildPath));
 /* SPA fallback: serve index.html for all non-API routes */
-app.get('*', (_req, res) => {
+app.get(/.*/, (_req, res) => {
     res.sendFile(path_1.default.join(clientBuildPath, 'index.html'));
 });
 app.use(errorHandler_1.errorHandler);

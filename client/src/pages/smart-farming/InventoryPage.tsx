@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Package, Plus, AlertTriangle, Edit2, Trash2, X, Search } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { StatCard } from '@/components/ui/StatCard'
 import { Input } from '@/components/ui/Input'
 import { cn } from '@/utils/cn'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { api, ApiError } from '@/services/api'
+import { fetchFarmers } from '@/services/farmersApi'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 type Category = 'seed' | 'fertilizer' | 'pesticide' | 'equipment' | 'other'
 
@@ -17,11 +20,6 @@ interface Item {
 
 const CATEGORY_COLORS: Record<Category, 'green' | 'blue' | 'orange' | 'cyan' | 'gray'> = {
   seed: 'green', fertilizer: 'blue', pesticide: 'orange', equipment: 'cyan', other: 'gray',
-}
-
-const CATEGORY_BG: Record<Category, string> = {
-  seed: 'bg-[#98CF59]/15', fertilizer: 'bg-[#336599]/12', pesticide: 'bg-orange-100',
-  equipment: 'bg-[#40BBB9]/12', other: 'bg-gray-100',
 }
 
 const initialItems: Item[] = [
@@ -43,6 +41,31 @@ const categoryChart = ['seed', 'fertilizer', 'pesticide', 'equipment'].map((c) =
 
 const emptyForm = { name: '', category: 'seed' as Category, quantity: '', unit: 'kg', reorderLevel: '', costPerUnit: '', supplier: '' }
 
+/** Inventory item as returned by the backend (no cost/supplier fields). */
+interface ApiInventoryItem {
+  id: string
+  name: string
+  category: Category
+  quantity: number
+  unit: string
+  reorderLevel: number
+  lastUpdated?: string
+  updatedAt?: string
+}
+
+const mapApiItem = (i: ApiInventoryItem): Item => ({
+  id: i.id,
+  name: i.name,
+  category: i.category,
+  quantity: i.quantity,
+  unit: i.unit,
+  reorderLevel: i.reorderLevel,
+  /* Not tracked by the backend — defaults keep the mock UI columns rendering */
+  costPerUnit: 0,
+  supplier: '—',
+  lastUpdated: (i.lastUpdated ?? i.updatedAt ?? new Date().toISOString()).split('T')[0],
+})
+
 export default function InventoryPage() {
   const [items, setItems] = useState<Item[]>(initialItems)
   const [search, setSearch] = useState('')
@@ -50,6 +73,27 @@ export default function InventoryPage() {
   const [showModal, setShowModal] = useState(false)
   const [editItem, setEditItem] = useState<Item | null>(null)
   const [form, setForm] = useState(emptyForm)
+  const [live, setLive] = useState(false)
+  const [farmerDbId, setFarmerDbId] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    /* Demo simplification: this page has no farmer selector, so the first live
+       farmer is used as the inventory owner for all API CRUD operations. */
+    fetchFarmers(1)
+      .then(async (farmers) => {
+        if (cancelled || farmers.length === 0) return
+        const ownerId = farmers[0].id
+        const apiItems = await api.get<ApiInventoryItem[]>(`/api/v1/inventory/farmer/${ownerId}`)
+        if (cancelled) return
+        setFarmerDbId(ownerId)
+        setLive(true)
+        /* Only replace the mock list when the server actually has stock items */
+        if (apiItems.length > 0) setItems(apiItems.map(mapApiItem))
+      })
+      .catch(() => { /* keep mock data; stay live=false */ })
+    return () => { cancelled = true }
+  }, [])
 
   const filtered = items.filter((i) => {
     const q = search.toLowerCase()
@@ -80,9 +124,42 @@ export default function InventoryPage() {
     }
     setItems((prev) => editItem ? prev.map((i) => i.id === editItem.id ? data : i) : [data, ...prev])
     setShowModal(false)
+
+    /* Sync to the API when live (fire-and-forget; local state is the fallback) */
+    if (live && farmerDbId) {
+      const payload = {
+        name: data.name, category: data.category, quantity: data.quantity,
+        unit: data.unit, reorderLevel: data.reorderLevel,
+      }
+      if (editItem) {
+        api.patch(`/api/v1/inventory/${editItem.id}`, payload)
+          .then(() => toast.success('Item updated on server'))
+          .catch(() => toast.error('Could not sync update — kept locally'))
+      } else {
+        api.post<ApiInventoryItem>('/api/v1/inventory', { farmerId: farmerDbId, ...payload })
+          .then((created) => {
+            /* Adopt the server id so later edits/deletes target the right record */
+            setItems((prev) => prev.map((i) => i.id === data.id ? { ...i, id: created.id } : i))
+            toast.success('Item added on server')
+          })
+          .catch(() => toast.error('Could not sync new item — kept locally'))
+      }
+    }
   }
 
-  const remove = (id: string) => setItems((prev) => prev.filter((i) => i.id !== id))
+  const remove = (id: string) => {
+    setItems((prev) => prev.filter((i) => i.id !== id))
+    if (live) {
+      api.delete(`/api/v1/inventory/${id}`)
+        .then(() => toast.success('Item deleted on server'))
+        .catch((err) => {
+          /* 404 = local-only item (e.g. mock row) — nothing to delete server-side */
+          if (!(err instanceof ApiError && err.status === 404)) {
+            toast.error('Could not delete on server — removed locally')
+          }
+        })
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -90,6 +167,7 @@ export default function InventoryPage() {
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-[#40BBB9]/12 rounded-xl flex items-center justify-center"><Package size={16} className="text-[#40BBB9]" /></div>
           <div><p className="text-sm font-bold text-[#06192C]">Inventory Management</p><p className="text-xs text-gray-400">Stock tracking and procurement planning</p></div>
+          <Badge variant={live ? 'green' : 'gray'}>{live ? 'Live data' : 'Demo data'}</Badge>
         </div>
         <Button size="sm" onClick={openAdd}><Plus size={14} /> Add Item</Button>
       </div>
@@ -131,7 +209,7 @@ export default function InventoryPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
               <XAxis dataKey="category" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12 }} formatter={(v: number) => [`R${v.toLocaleString()}`, 'Value']} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12 }} formatter={(v) => [`R${Number(v).toLocaleString()}`, 'Value']} />
               <Bar dataKey="value" name="Stock Value (R)" fill="#40BBB9" radius={[6,6,0,0]} />
             </BarChart>
           </ResponsiveContainer>

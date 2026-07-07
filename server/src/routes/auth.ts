@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../lib/prisma'
 import { z } from 'zod'
+import { nextFarmerId } from '../lib/ids'
 
 const router = Router()
 
@@ -20,12 +21,6 @@ const registerSchema = z.object({
   farmingPractices: z.array(z.string()).default([]),
 })
 
-function generateFarmerId(): string {
-  const year = new Date().getFullYear()
-  const rand = Math.floor(Math.random() * 99999).toString().padStart(5, '0')
-  return `CSA-${year}-${rand}`
-}
-
 function signTokens(userId: string, role: string) {
   const access = jwt.sign({ userId, role }, process.env.JWT_SECRET!, { expiresIn: '15m' })
   const refresh = jwt.sign({ userId, role }, process.env.JWT_REFRESH_SECRET!, { expiresIn: '7d' })
@@ -39,7 +34,7 @@ router.post('/register', async (req, res, next) => {
     if (existing) { res.status(409).json({ error: 'Email already registered' }); return }
 
     const hashed = await bcrypt.hash(body.password, 12)
-    const farmerId = generateFarmerId()
+    const farmerId = await nextFarmerId()
 
     const user = await prisma.user.create({
       data: {
@@ -56,8 +51,8 @@ router.post('/register', async (req, res, next) => {
             farmSize: body.farmSize,
             province: body.province,
             district: body.district,
-            cropTypes: body.cropTypes,
-            farmingPractices: body.farmingPractices,
+            cropTypes: JSON.stringify(body.cropTypes),
+            farmingPractices: JSON.stringify(body.farmingPractices),
             status: 'pending',
           },
         },
@@ -67,7 +62,10 @@ router.post('/register', async (req, res, next) => {
 
     const tokens = signTokens(user.id, user.role)
     res.status(201).json({
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, farmerId },
+      user: {
+        id: user.id, name: user.name, email: user.email, role: user.role,
+        farmerId, farmerDbId: user.farmer?.id,
+      },
       ...tokens,
     })
   } catch (err) { next(err) }
@@ -86,7 +84,7 @@ router.post('/login', async (req, res, next) => {
     res.json({
       user: {
         id: user.id, name: user.name, email: user.email, role: user.role,
-        farmerId: user.farmer?.farmerId,
+        farmerId: user.farmer?.farmerId, farmerDbId: user.farmer?.id,
       },
       ...tokens,
     })

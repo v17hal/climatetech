@@ -136,8 +136,8 @@ export default function SettingsPage() {
             <CardHeader><CardTitle>Account Details</CardTitle></CardHeader>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               {[
-                { label: 'Account ID', value: user?.id?.slice(0, 16) + '...' ?? '—' },
-                { label: 'Role', value: user?.role?.replace('_', ' ') ?? '—' },
+                { label: 'Account ID', value: user?.id ? `${user.id.slice(0, 16)}...` : '—' },
+                { label: 'Role', value: user?.role ? user.role.replace('_', ' ') : '—' },
                 { label: 'Member Since', value: '15 January 2024' },
                 { label: 'Last Login', value: 'Today, 09:42 AM' },
                 { label: 'Account Status', value: 'Active' },

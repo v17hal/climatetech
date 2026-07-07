@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Users, Leaf, Map, ShieldCheck, Activity, TrendingUp, ArrowRight, LayoutGrid } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { StatCard } from '@/components/ui/StatCard'
@@ -5,7 +6,9 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
-import { formatDate } from '@/utils/format'
+import { api } from '@/services/api'
+import { fetchFarmers } from '@/services/farmersApi'
+import { formatDate, formatNumber } from '@/utils/format'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, Legend,
@@ -69,14 +72,53 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
   return null
 }
 
+interface LiveStats {
+  totalFarmers: number
+  activeFarms: number
+  carbonTracked: number
+  complianceRate: number
+}
+
 export default function DashboardPage() {
   const { user } = useAuthStore()
   const today = formatDate(new Date().toISOString())
 
+  const [live, setLive] = useState(false)
+  const [stats, setStats] = useState<LiveStats | null>(null)
+  const [recent, setRecent] = useState(recentFarmers)
+
+  useEffect(() => {
+    let cancelled = false
+    api.get<LiveStats>('/api/v1/dashboard/stats')
+      .then((data) => { if (!cancelled) { setStats(data); setLive(true) } })
+      .catch(() => { /* keep mock data */ })
+    fetchFarmers()
+      .then((farmers) => {
+        if (cancelled) return
+        const rows = [...farmers]
+          .sort((a, b) => new Date(b.enrolledAt).getTime() - new Date(a.enrolledAt).getTime())
+          .slice(0, 5)
+          .map((f) => ({
+            id: f.farmerId,
+            name: f.name,
+            province: f.province,
+            farmSize: f.farmSize,
+            crops: f.cropTypes.join(', '),
+            status: f.status,
+            date: f.enrolledAt,
+          }))
+        if (rows.length > 0) setRecent(rows)
+        setLive(true)
+      })
+      .catch(() => { /* keep mock data */ })
+    return () => { cancelled = true }
+  }, [])
+
   return (
     <div className="flex flex-col gap-6">
       {/* Custom dashboard link */}
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <Badge variant={live ? 'green' : 'gray'}>{live ? 'Live data' : 'Demo data'}</Badge>
         <Link to="/dashboard/custom">
           <Button variant="outline" size="sm">
             <LayoutGrid size={13} /> Customise Dashboard
@@ -113,14 +155,14 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           title="Farmers Enrolled"
-          value="12,441"
+          value={stats ? stats.totalFarmers.toLocaleString() : '12,441'}
           trend={8.2}
           icon={<Users size={20} className="text-[#336599]" />}
           iconBg="bg-[#336599]/12"
         />
         <StatCard
           title="Carbon Tracked"
-          value="84.2k"
+          value={stats ? formatNumber(stats.carbonTracked) : '84.2k'}
           suffix="tCO₂"
           trend={12.5}
           icon={<Leaf size={20} className="text-[#40BBB9]" />}
@@ -128,14 +170,14 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Active Farms"
-          value="9,814"
+          value={stats ? stats.activeFarms.toLocaleString() : '9,814'}
           trend={5.1}
           icon={<Map size={20} className="text-[#98CF59]" />}
           iconBg="bg-[#98CF59]/15"
         />
         <StatCard
           title="Compliance Rate"
-          value="94%"
+          value={stats ? `${Math.round(stats.complianceRate)}%` : '94%'}
           trend={2.3}
           icon={<ShieldCheck size={20} className="text-[#66C390]" />}
           iconBg="bg-[#66C390]/15"
@@ -218,7 +260,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {recentFarmers.map((f) => (
+                {recent.map((f) => (
                   <tr key={f.id} className="border-b border-gray-50 hover:bg-[#F4F8F6] transition-colors">
                     <td className="px-6 py-3 text-xs font-mono font-semibold text-[#40BBB9]">{f.id}</td>
                     <td className="px-6 py-3 text-xs font-semibold text-[#06192C]">{f.name}</td>

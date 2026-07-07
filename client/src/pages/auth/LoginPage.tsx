@@ -7,6 +7,8 @@ import { Mail, Lock, Eye, EyeOff, Leaf } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
+import { api, ApiError } from '@/services/api'
+import type { User } from '@/types'
 import toast from 'react-hot-toast'
 
 const schema = z.object({
@@ -16,12 +18,20 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-/* Demo credentials for development */
+/* Demo credentials — seeded in the backend DB; also used as offline fallback */
 const DEMO_USERS = [
-  { email: 'admin@carbonsmart.co.za', password: 'admin123', role: 'admin', name: 'Sipho Dlamini' },
-  { email: 'officer@carbonsmart.co.za', password: 'officer123', role: 'agri_officer', name: 'Amara Osei' },
-  { email: 'farmer@carbonsmart.co.za', password: 'farmer123', role: 'farmer', name: 'John Mwangi', farmerId: 'CSA-2024-00001' },
+  { email: 'admin@carbonsmart.co.za', password: 'admin123', role: 'admin', name: 'Sipho Dlamini', label: 'CSSA Admin' },
+  { email: 'officer@carbonsmart.co.za', password: 'officer123', role: 'field_officer', name: 'Amara Osei', label: 'Field Officer' },
+  { email: 'lab@carbonsmart.co.za', password: 'lab123', role: 'lab_technician', name: 'Naledi Khumalo', label: 'Lab Technician' },
+  { email: 'auditor@carbonsmart.co.za', password: 'auditor123', role: 'vvb_auditor', name: 'Erik Johansson', label: 'VVB Auditor' },
+  { email: 'farmer@carbonsmart.co.za', password: 'farmer123', role: 'farmer', name: 'John Mwangi', farmerId: 'CSA-2024-00001', label: 'Farmer' },
 ] as const
+
+interface LoginResponse {
+  user: User
+  access: string
+  refresh: string
+}
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -29,35 +39,45 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
   const onSubmit = async (data: FormData) => {
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 800))
-
-    const matched = DEMO_USERS.find(
-      (u) => u.email === data.email && u.password === data.password
-    )
-
-    if (matched) {
-      login(
-        {
-          id: crypto.randomUUID(),
-          name: matched.name,
-          email: matched.email,
-          role: matched.role as 'admin' | 'agri_officer' | 'farmer' | 'viewer',
-          farmerId: 'farmerId' in matched ? matched.farmerId : undefined,
-        },
-        'demo-jwt-token'
-      )
-      toast.success(`Welcome back, ${matched.name.split(' ')[0]}!`)
+    try {
+      const res = await api.post<LoginResponse>('/api/v1/auth/login', data)
+      login(res.user, res.access, res.refresh)
+      toast.success(`Welcome back, ${res.user.name.split(' ')[0]}!`)
       navigate('/dashboard')
-    } else {
-      toast.error('Invalid email or password')
+    } catch (err) {
+      if (err instanceof ApiError) {
+        toast.error(err.message)
+      } else {
+        /* API unreachable — fall back to local demo mode so the UI still works */
+        const matched = DEMO_USERS.find(
+          (u) => u.email === data.email && u.password === data.password
+        )
+        if (matched) {
+          login(
+            {
+              id: crypto.randomUUID(),
+              name: matched.name,
+              email: matched.email,
+              role: matched.role,
+              farmerId: 'farmerId' in matched ? matched.farmerId : undefined,
+            },
+            'demo-jwt-token'
+          )
+          toast.success(`Welcome back, ${matched.name.split(' ')[0]}! (offline demo mode)`)
+          navigate('/dashboard')
+        } else {
+          toast.error('API unreachable and no matching demo credentials')
+        }
+      }
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
@@ -178,10 +198,16 @@ export default function LoginPage() {
             <p className="text-xs font-bold text-[#06192C] mb-2">Demo Credentials</p>
             <div className="flex flex-col gap-1.5">
               {DEMO_USERS.map((u) => (
-                <div key={u.email} className="flex justify-between text-xs">
+                <button
+                  key={u.email}
+                  type="button"
+                  onClick={() => { setValue('email', u.email); setValue('password', u.password) }}
+                  className="flex justify-between items-center text-xs hover:bg-[#40BBB9]/10 rounded-lg px-1.5 py-0.5 -mx-1.5 transition-colors cursor-pointer"
+                  title={`Sign in as ${u.label}`}
+                >
                   <span className="text-gray-500">{u.email}</span>
                   <span className="text-[#40BBB9] font-mono">{u.password}</span>
-                </div>
+                </button>
               ))}
             </div>
           </div>

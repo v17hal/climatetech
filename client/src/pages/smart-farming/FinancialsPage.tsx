@@ -9,7 +9,7 @@ import { mockFarmers } from '@/data/mockFarmers'
 import { formatDate } from '@/utils/format'
 import { cn } from '@/utils/cn'
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, Legend, LineChart, Line,
 } from 'recharts'
 
@@ -122,7 +122,7 @@ export default function FinancialsPage() {
             <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false}
               tickFormatter={(v) => `R${(v/1000).toFixed(0)}k`} />
             <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid #f0f0f0' }}
-              formatter={(v: number) => [`R${v.toLocaleString()}`, '']} />
+              formatter={(v: unknown) => [`R${Number(v).toLocaleString()}`, '']} />
             <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
             <Bar dataKey="income" name="Income" fill="#98CF59" radius={[4,4,0,0]} />
             <Bar dataKey="expenses" name="Expenses" fill="#f97316" radius={[4,4,0,0]} />
@@ -142,7 +142,7 @@ export default function FinancialsPage() {
               <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false}
                 tickFormatter={(v) => `R${(v/1000).toFixed(0)}k`} />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid #f0f0f0' }}
-                formatter={(v: number) => [`R${v.toLocaleString()}`, '']} />
+                formatter={(v: unknown) => [`R${Number(v).toLocaleString()}`, '']} />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
               <Line type="monotone" dataKey="optimistic" name="Optimistic" stroke="#98CF59" strokeWidth={1.5} strokeDasharray="5 3" dot={false} />
               <Line type="monotone" dataKey="projected" name="Projected" stroke="#40BBB9" strokeWidth={2.5} dot={false} />

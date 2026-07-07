@@ -1,9 +1,11 @@
 import { Bell, Search, Menu, WifiOff, RefreshCw } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useUIStore } from '@/store/uiStore'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/utils/cn'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
+import { api } from '@/services/api'
+import type { Alert } from '@/types'
 
 interface HeaderProps {
   title: string
@@ -16,12 +18,45 @@ const mockAlerts = [
   { id: '3', title: '3 new farmer enrollments', time: '3h ago', type: 'info' },
 ]
 
+function timeAgo(iso: string): string {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
+}
+
+const severityToType = (severity: Alert['severity']): string =>
+  severity === 'critical' || severity === 'high' ? 'critical'
+  : severity === 'medium' ? 'warning'
+  : 'info'
+
 export function Header({ title, subtitle }: HeaderProps) {
   const { user } = useAuthStore()
   const { toggleSidebar } = useUIStore()
   const [showAlerts, setShowAlerts] = useState(false)
-  const unreadCount = mockAlerts.length
+  const [alerts, setAlerts] = useState(mockAlerts)
+  const unreadCount = alerts.length
   const { isOnline, pendingCount, syncing, doSync } = useOfflineSync()
+
+  useEffect(() => {
+    let cancelled = false
+    api.get<Alert[]>('/api/v1/alerts')
+      .then((data) => {
+        if (cancelled || data.length === 0) return
+        setAlerts(
+          data.slice(0, 5).map((a) => ({
+            id: a.id,
+            title: a.title,
+            time: timeAgo(a.createdAt),
+            type: severityToType(a.severity),
+          }))
+        )
+      })
+      .catch(() => { /* keep mock alerts */ })
+    return () => { cancelled = true }
+  }, [])
 
   return (
     <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
@@ -90,7 +125,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                   Mark all read
                 </span>
               </div>
-              {mockAlerts.map((alert) => (
+              {alerts.map((alert) => (
                 <div key={alert.id} className="px-4 py-3 hover:bg-[#F4F8F6] cursor-pointer border-b border-gray-50 transition-colors">
                   <div className="flex items-start gap-3">
                     <span

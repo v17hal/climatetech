@@ -18,7 +18,7 @@ export function GDPRBanner() {
   const accept = (all: boolean) => {
     const consent = all
       ? { essential: true, analytics: true, functional: true }
-      : { essential: true, ...prefs }
+      : { analytics: prefs.analytics, functional: prefs.functional, essential: true }
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...consent, date: new Date().toISOString() }))
     setVisible(false)
   }

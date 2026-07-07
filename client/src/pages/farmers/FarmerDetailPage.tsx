@@ -1,13 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit2, MapPin, Phone, Mail, Leaf, Droplets, BarChart3, ShieldCheck, Calendar } from 'lucide-react'
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/utils/format'
+import { api } from '@/services/api'
+import { mapApiFarmer } from '@/services/farmersApi'
+import type { ApiFarmer } from '@/services/farmersApi'
 import { mockFarmers, generateCarbonRecords } from '@/data/mockFarmers'
 import { FarmerFormModal } from './components/FarmerFormModal'
-import type { Farmer } from '@/types'
+import type { Farmer, CarbonRecord } from '@/types'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
@@ -24,8 +27,29 @@ export default function FarmerDetailPage() {
   const navigate = useNavigate()
   const [farmers, setFarmers] = useState(mockFarmers)
   const [showEdit, setShowEdit] = useState(false)
+  const [live, setLive] = useState(false)
+  const [liveFarmer, setLiveFarmer] = useState<Farmer | null>(null)
+  const [liveRecords, setLiveRecords] = useState<CarbonRecord[]>([])
 
-  const farmer = farmers.find((f) => f.id === id)
+  useEffect(() => {
+    if (!id) return
+    let cancelled = false
+    api.get<ApiFarmer & { carbonRecords?: CarbonRecord[] }>(`/api/v1/farmers/${id}`)
+      .then((data) => {
+        if (cancelled) return
+        setLiveFarmer(mapApiFarmer(data))
+        setLiveRecords(
+          [...(data.carbonRecords ?? [])].sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          )
+        )
+        setLive(true)
+      })
+      .catch(() => { /* 404 / API down — fall back to mock lookup */ })
+    return () => { cancelled = true }
+  }, [id])
+
+  const farmer = liveFarmer ?? farmers.find((f) => f.id === id)
   if (!farmer) return (
     <div className="text-center py-20 text-gray-400">
       <p className="text-lg font-bold mb-2">Farmer not found</p>
@@ -35,7 +59,7 @@ export default function FarmerDetailPage() {
     </div>
   )
 
-  const carbonRecords = generateCarbonRecords(farmer.id)
+  const carbonRecords = live && liveRecords.length > 0 ? liveRecords : generateCarbonRecords(farmer.id)
   const latestCarbon = carbonRecords[carbonRecords.length - 1]
 
   const chartData = carbonRecords.map((r) => ({
@@ -46,7 +70,11 @@ export default function FarmerDetailPage() {
   }))
 
   const handleSave = (data: Partial<Farmer>) => {
-    setFarmers((prev) => prev.map((f) => f.id === farmer.id ? { ...f, ...data } : f))
+    if (liveFarmer) {
+      setLiveFarmer({ ...liveFarmer, ...data })
+    } else {
+      setFarmers((prev) => prev.map((f) => f.id === farmer.id ? { ...f, ...data } : f))
+    }
     setShowEdit(false)
   }
 
@@ -54,12 +82,15 @@ export default function FarmerDetailPage() {
     <div className="flex flex-col gap-6">
       {/* Back + actions */}
       <div className="flex items-center justify-between">
-        <button
-          onClick={() => navigate('/farmers')}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#06192C] transition-colors font-medium"
-        >
-          <ArrowLeft size={16} /> Back to Farmers
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/farmers')}
+            className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#06192C] transition-colors font-medium"
+          >
+            <ArrowLeft size={16} /> Back to Farmers
+          </button>
+          <Badge variant={live ? 'green' : 'gray'}>{live ? 'Live data' : 'Demo data'}</Badge>
+        </div>
         <Button size="sm" onClick={() => setShowEdit(true)}>
           <Edit2 size={14} /> Edit Profile
         </Button>

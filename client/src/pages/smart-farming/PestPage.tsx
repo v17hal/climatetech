@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Bug, AlertTriangle, Plus, CheckCircle, Clock, X, MapPin, ShieldCheck } from 'lucide-react'
-import { Card, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { StatCard } from '@/components/ui/StatCard'

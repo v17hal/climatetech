@@ -1,13 +1,15 @@
-import { useState } from 'react'
-import { Leaf, Plus, Download, TrendingUp, Droplets, FlaskConical, Wind, FileText } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Leaf, Plus, Download, TrendingUp, Droplets, FlaskConical, FileText } from 'lucide-react'
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { StatCard } from '@/components/ui/StatCard'
 import { formatDate } from '@/utils/format'
+import { api } from '@/services/api'
+import { fetchFarmers } from '@/services/farmersApi'
 import { mockFarmers, generateCarbonRecords } from '@/data/mockFarmers'
 import { CarbonEntryModal } from './components/CarbonEntryModal'
-import type { CarbonRecord } from '@/types'
+import type { CarbonRecord, Farmer } from '@/types'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis,
@@ -43,18 +45,48 @@ const radarData = [
   { metric: 'Compliance', value: 94 },
 ]
 
-const recentReadings = allRecords
-  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  .slice(0, 10)
-  .map((r) => ({
-    ...r,
-    farmerName: mockFarmers.find((f) => f.id === r.farmerId)?.name ?? 'Unknown',
-    farmerId: mockFarmers.find((f) => f.id === r.farmerId)?.farmerId ?? '-',
-  }))
-
 export default function CarbonPage() {
   const [showEntry, setShowEntry] = useState(false)
   const [records, setRecords] = useState(allRecords)
+  const [farmers, setFarmers] = useState<Farmer[]>(mockFarmers)
+  const [live, setLive] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    /* Fetching carbon for every farmer is too heavy — when live farmers load,
+       pull records for the first few and merge them into the readings table. */
+    fetchFarmers()
+      .then(async (liveFarmers) => {
+        if (cancelled || liveFarmers.length === 0) return
+        setFarmers(liveFarmers)
+        setLive(true)
+        const batches = await Promise.all(
+          liveFarmers.slice(0, 5).map((f) =>
+            api.get<CarbonRecord[]>(`/api/v1/carbon/farmer/${f.id}`).catch(() => [] as CarbonRecord[])
+          )
+        )
+        const liveRecords = batches.flat()
+        if (!cancelled && liveRecords.length > 0) {
+          setRecords((prev) => [...liveRecords, ...prev])
+        }
+      })
+      .catch(() => { /* keep mock data; stay live=false */ })
+    return () => { cancelled = true }
+  }, [])
+
+  /* Name lookup spans live + mock farmers so mock readings still resolve */
+  const farmerLookup = useMemo(() => [...farmers, ...mockFarmers], [farmers])
+
+  const recentReadings = useMemo(() =>
+    [...records]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 10)
+      .map((r) => ({
+        ...r,
+        farmerName: farmerLookup.find((f) => f.id === r.farmerId)?.name ?? 'Unknown',
+        farmerId: farmerLookup.find((f) => f.id === r.farmerId)?.farmerId ?? '-',
+      })),
+  [records, farmerLookup])
 
   const totalCarbon = records.reduce((s, r) => s + r.carbonLevel, 0)
   const avgCarbon = totalCarbon / records.length
@@ -76,8 +108,9 @@ export default function CarbonPage() {
           </div>
           <div>
             <p className="text-sm font-bold text-[#06192C]">{records.length} Total Readings</p>
-            <p className="text-xs text-gray-400">Across {mockFarmers.length} farms</p>
+            <p className="text-xs text-gray-400">Across {farmers.length} farms</p>
           </div>
+          <Badge variant={live ? 'green' : 'gray'}>{live ? 'Live data' : 'Demo data'}</Badge>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm"><Download size={14} /> Export Report</Button>
@@ -230,7 +263,7 @@ export default function CarbonPage() {
 
       {showEntry && (
         <CarbonEntryModal
-          farmers={mockFarmers}
+          farmers={farmers}
           onClose={() => setShowEntry(false)}
           onSave={handleAdd}
         />

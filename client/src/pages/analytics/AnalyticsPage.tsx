@@ -200,13 +200,6 @@ export default function AnalyticsPage() {
 
   const template = TEMPLATES.find((t) => t.id === selectedTemplate)!
 
-  const filteredFarmers = useMemo(() => {
-    return mockFarmers.filter((f) =>
-      (!province || f.province === province) &&
-      (!status || f.status === status)
-    )
-  }, [province, status])
-
   const rows = useMemo(() => ROW_GENERATORS[selectedTemplate]().filter((row) => {
     if (province && (row['Province'] !== province)) return false
     return true
@@ -295,7 +288,7 @@ export default function AnalyticsPage() {
                 <PieChart>
                   <Pie data={lsmDist} dataKey="value" nameKey="name" cx="50%" cy="50%"
                     outerRadius={60} innerRadius={36} paddingAngle={3}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                     labelLine={false}>
                     {lsmDist.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
                   </Pie>
@@ -326,7 +319,7 @@ export default function AnalyticsPage() {
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid #f0f0f0' }}
-                    formatter={(v: number, _n: string, p: { payload: { fullName: string } }) => [v, p.payload.fullName]} />
+                    formatter={(v: unknown, _n: unknown, p: unknown) => [Number(v), (p as { payload: { fullName: string } }).payload.fullName]} />
                   <Bar dataKey="carbon" name="Carbon (tCO₂/ha)" fill="#40BBB9" radius={[5, 5, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -559,7 +552,7 @@ export default function AnalyticsPage() {
                   {rows.slice(0, 5).map((row, i) => (
                     <tr key={i} className="border-b border-gray-50 hover:bg-[#F4F8F6] transition-colors">
                       {template.columns.map((col) => (
-                        <td key={col} className="px-4 py-3 text-xs text-[#06192C] whitespace-nowrap">{String(row[col] ?? '—')}</td>
+                        <td key={col} className="px-4 py-3 text-xs text-[#06192C] whitespace-nowrap">{String((row as Record<string, unknown>)[col] ?? '—')}</td>
                       ))}
                     </tr>
                   ))}
@@ -602,7 +595,7 @@ export default function AnalyticsPage() {
                   {rows.map((row, i) => (
                     <tr key={i} className={cn('border-b border-gray-50 hover:bg-[#F4F8F6] transition-colors', i % 2 === 0 ? 'bg-white' : 'bg-[#F4F8F6]/50')}>
                       {template.columns.map((col) => (
-                        <td key={col} className="px-4 py-2.5 text-xs text-[#06192C] whitespace-nowrap">{String(row[col] ?? '—')}</td>
+                        <td key={col} className="px-4 py-2.5 text-xs text-[#06192C] whitespace-nowrap">{String((row as Record<string, unknown>)[col] ?? '—')}</td>
                       ))}
                     </tr>
                   ))}

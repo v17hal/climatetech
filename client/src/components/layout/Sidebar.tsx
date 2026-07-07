@@ -6,6 +6,8 @@ import {
   LayoutDashboard, Users, Leaf, Map, BarChart3,
   Droplets, Bug, CloudSun, Package, DollarSign,
   FileBarChart, Settings, HelpCircle, LogOut, ChevronLeft, Shield,
+  Factory, TestTubes, Camera, Wheat, CalendarRange, Calculator,
+  Sprout, FlaskConical,
 } from 'lucide-react'
 
 const navItems = [
@@ -14,6 +16,16 @@ const navItems = [
   { label: 'Carbon Tracking', icon: Leaf, to: '/carbon' },
   { label: 'Farm Map', icon: Map, to: '/mapping' },
   { label: 'LSM Profiles', icon: BarChart3, to: '/lsm' },
+]
+
+/* dMRV Registry & Operations — CSSA staff + auditors */
+const dmrvItems = [
+  { label: 'Biochar Inventory', icon: Factory, to: '/dmrv/biochar' },
+  { label: 'dCoC Tracker', icon: TestTubes, to: '/dmrv/dcoc' },
+  { label: 'Camera Log', icon: Camera, to: '/dmrv/camera-log' },
+  { label: 'Yield & Harvest', icon: Wheat, to: '/dmrv/harvest' },
+  { label: 'Seasonality', icon: CalendarRange, to: '/dmrv/seasonality' },
+  { label: 'Carbon Ledger', icon: Calculator, to: '/dmrv/ledger' },
 ]
 
 const smartFarmingItems = [
@@ -68,6 +80,12 @@ export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar } = useUIStore()
   const navigate = useNavigate()
 
+  const role = user?.role
+  const isFarmer = role === 'farmer'
+  const isLabTech = role === 'lab_technician'
+  const isAuditor = role === 'vvb_auditor' || role === 'viewer'
+  const isStaff = role === 'admin' || role === 'field_officer' || role === 'agri_officer'
+
   const handleLogout = () => {
     logout()
     navigate('/login')
@@ -119,22 +137,57 @@ export function Sidebar() {
         </button>
       )}
 
-      {/* Nav */}
+      {/* Nav — role-aware */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-1">
-        {navItems.map((item) => (
+        {(isFarmer
+          ? [{ label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' }]
+          : navItems
+        ).map((item) => (
           <NavItem key={item.to} {...item} collapsed={sidebarCollapsed} />
         ))}
 
-        {!sidebarCollapsed && (
-          <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest px-3 mt-4 mb-1">
-            Smart Farming
-          </p>
+        {/* Farmer: Value & Impact view */}
+        {isFarmer && (
+          <NavItem to="/impact" icon={Sprout} label="My Farm Impact" collapsed={sidebarCollapsed} />
         )}
-        {sidebarCollapsed && <div className="border-t border-white/10 my-2" />}
 
-        {smartFarmingItems.map((item) => (
-          <NavItem key={item.to} {...item} collapsed={sidebarCollapsed} />
-        ))}
+        {/* Lab technician: secure upload portal */}
+        {(isLabTech || isStaff) && (
+          <NavItem to="/lab" icon={FlaskConical} label="Lab Portal" collapsed={sidebarCollapsed} />
+        )}
+
+        {/* dMRV registry — staff + auditors */}
+        {(isStaff || isAuditor) && (
+          <>
+            {!sidebarCollapsed && (
+              <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest px-3 mt-4 mb-1">
+                dMRV Registry
+              </p>
+            )}
+            {sidebarCollapsed && <div className="border-t border-white/10 my-2" />}
+            {dmrvItems.map((item) => (
+              <NavItem key={item.to} {...item} collapsed={sidebarCollapsed} />
+            ))}
+            {(isStaff || isAuditor) && (
+              <NavItem to="/impact" icon={Sprout} label="Farmer Impact" collapsed={sidebarCollapsed} />
+            )}
+          </>
+        )}
+
+        {!isLabTech && !isAuditor && (
+          <>
+            {!sidebarCollapsed && (
+              <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest px-3 mt-4 mb-1">
+                Smart Farming
+              </p>
+            )}
+            {sidebarCollapsed && <div className="border-t border-white/10 my-2" />}
+
+            {smartFarmingItems.map((item) => (
+              <NavItem key={item.to} {...item} collapsed={sidebarCollapsed} />
+            ))}
+          </>
+        )}
 
         {!sidebarCollapsed && (
           <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest px-3 mt-4 mb-1">
@@ -143,9 +196,11 @@ export function Sidebar() {
         )}
         {sidebarCollapsed && <div className="border-t border-white/10 my-2" />}
 
-        {bottomItems.map((item) => (
-          <NavItem key={item.to} {...item} collapsed={sidebarCollapsed} />
-        ))}
+        {bottomItems
+          .filter((item) => item.to !== '/settings/audit' || role === 'admin' || isAuditor)
+          .map((item) => (
+            <NavItem key={item.to} {...item} collapsed={sidebarCollapsed} />
+          ))}
       </nav>
 
       {/* User */}

@@ -13,7 +13,6 @@ import {
   ShieldCheck, TrendingUp, DollarSign, BarChart3, CloudSun,
   Droplets, Bug, Package,
 } from 'lucide-react'
-import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { StatCard } from '@/components/ui/StatCard'
@@ -161,7 +160,7 @@ function WidgetContent({ id }: { id: WidgetId }) {
             <PieChart>
               <Pie data={lsmPie} dataKey="value" nameKey="name" cx="50%" cy="50%"
                 outerRadius={65} innerRadius={40} paddingAngle={4}
-                label={({ name, percent }) => `${name} ${(percent*100).toFixed(0)}%`} labelLine={false}>
+                label={({ name, percent }) => `${name} ${((percent ?? 0)*100).toFixed(0)}%`} labelLine={false}>
                 {lsmPie.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
               </Pie>
               <Tooltip contentStyle={{ fontSize: 11, borderRadius: 10 }} />

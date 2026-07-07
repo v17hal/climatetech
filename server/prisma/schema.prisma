@@ -7,42 +7,53 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Roles: admin | field_officer | lab_technician | vvb_auditor | farmer
+// (legacy aliases accepted at the API layer: agri_officer → field_officer, viewer → vvb_auditor)
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      String   @default("farmer")
-  farmer    Farmer?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  password    String
+  role        String       @default("farmer")
+  farmer      Farmer?
+  labResults  LabResult[]  @relation("EnteredBy")
+  fieldPhotos FieldPhoto[] @relation("UploadedBy")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Farmer {
-  id               String  @id @default(cuid())
-  farmerId         String  @unique
-  userId           String  @unique
-  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String   @id @default(cuid())
+  farmerId         String   @unique
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   phone            String
-  nationalId       String  @unique
+  nationalId       String   @unique
   farmName         String
   farmSize         Float
-  farmSizeUnit     String  @default("ha")
+  farmSizeUnit     String   @default("ha")
   province         String
   district         String
-  cropTypes        String  @default("[]")
-  farmingPractices String  @default("[]")
+  cropTypes        String   @default("[]")
+  farmingPractices String   @default("[]")
   latitude         Float?
   longitude        Float?
+  // GeoJSON-style polygon ring [[lat,lng],...] stored as JSON string — used by the geospatial trust verifier
+  boundary         String?
   lsmScore         Int?
   lsmCategory      String?
-  status           String  @default("pending")
+  status           String   @default("pending")
   carbonRecords    CarbonRecord[]
   alerts           Alert[]
   inventoryItems   InventoryItem[]
   irrigationLogs   IrrigationLog[]
   pestReports      PestReport[]
   financialRecords FinancialRecord[]
+  soilSamples      SoilSample[]
+  fieldPhotos      FieldPhoto[]
+  applications     ApplicationRecord[]
+  harvests         HarvestRecord[]
+  payouts          Payout[]
   enrolledAt       DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -120,4 +131,184 @@ model Alert {
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────
+// dMRV — Biochar registry & operations ("Digital Vault")
+// ─────────────────────────────────────────────────────────────
+
+// Production Ledger Table — one row per pyrolysis batch.
+// Gate 1 (Verra/Puro.earth): pyrolysisTemp >= 350°C enforced before save.
+model BiocharBatch {
+  id               String   @id @default(cuid())
+  batchNumber      String   @unique // BC-YYYY-NNN
+  productionDate   DateTime
+  feedstockType    String // rice_husk | wood_waste | maize_stover | sugarcane_bagasse | other
+  pyrolysisTemp    Float // °C
+  rawWeightTonnes  Float
+  region           String
+  // Chemistry (written by lab_technician via LabResult; denormalised here for the ledger)
+  cOrgPercent      Float?
+  hcRatio          Float?
+  heavyMetalsPass  Boolean?
+  dcocStatus       String   @default("produced") // produced | sampled | lab_received | results_entered | rejected
+  issuanceEligible Boolean  @default(false)
+  createdById      String?
+  shipments        Shipment[]
+  applications     ApplicationRecord[]
+  samples          SoilSample[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// Outbound biochar logistics — feeds the Mass Balance tracker and the
+// Deduction Function (mileageKm × diesel emission factor).
+model Shipment {
+  id            String       @id @default(cuid())
+  batchId       String
+  batch         BiocharBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  date          DateTime
+  weightTonnes  Float
+  destination   String
+  waybillNumber String
+  mileageKm     Float
+  createdAt     DateTime     @default(now())
+}
+
+// Biochar applied to a farmer's field — completes the mass balance:
+// produced − shipped − applied = remaining inventory.
+model ApplicationRecord {
+  id           String       @id @default(cuid())
+  batchId      String
+  batch        BiocharBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  farmerId     String
+  farmer       Farmer       @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  date         DateTime
+  weightTonnes Float
+  notes        String?
+  createdAt    DateTime     @default(now())
+}
+
+// Chain of Custody Table — dCoC traffic light per soil sample:
+// sampled (yellow) → lab_received (orange) → results_entered (green) | rejected | flagged
+model SoilSample {
+  id                String       @id @default(cuid())
+  sampleCode        String       @unique // SS-YYYY-NNNN
+  batchId           String?
+  batch             BiocharBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  farmerId          String?
+  farmer            Farmer?      @relation(fields: [farmerId], references: [id], onDelete: SetNull)
+  status            String       @default("sampled")
+  photoId           String?      @unique
+  photo             FieldPhoto?  @relation(fields: [photoId], references: [id])
+  waybillNumber     String?
+  labReceivedAt     DateTime?
+  assignedLabTechId String?
+  labResult         LabResult?
+  sampledAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+// Lab chemistry + certificate (PDF) — Gate 3 (EBC/IBI):
+// hcRatio >= 0.70 OR heavyMetalsPass == false ⇒ sample/batch rejected, issuance locked.
+model LabResult {
+  id                     String     @id @default(cuid())
+  sampleId               String     @unique
+  sample                 SoilSample @relation(fields: [sampleId], references: [id], onDelete: Cascade)
+  cOrgPercent            Float
+  hcRatio                Float
+  heavyMetalsPass        Boolean
+  soilPH                 Float?
+  electricalConductivity Float?
+  bulkDensity            Float?
+  specificSurfaceArea    Float?
+  waterHoldingCapacity   Float?
+  certificatePath        String // required evidence lock — lab PDF
+  enteredById            String
+  enteredBy              User       @relation("EnteredBy", fields: [enteredById], references: [id])
+  enteredAt              DateTime   @default(now())
+}
+
+// Camera log — every field photo carries UTC timestamp, GPS (5 dp) and device ID.
+// verificationStatus set by the automated geospatial trust verifier.
+model FieldPhoto {
+  id                 String      @id @default(cuid())
+  filePath           String
+  utcTimestamp       DateTime
+  latitude           Float
+  longitude          Float
+  deviceId           String
+  photoType          String      @default("field") // field | sample | before | after
+  caption            String?
+  farmerId           String?
+  farmer             Farmer?     @relation(fields: [farmerId], references: [id], onDelete: SetNull)
+  isVerified         Boolean     @default(false)
+  verificationStatus String      @default("pending") // verified | flagged_boundary_mismatch | pending
+  uploadedById       String?
+  uploadedBy         User?       @relation("UploadedBy", fields: [uploadedById], references: [id])
+  sample             SoilSample?
+  createdAt          DateTime    @default(now())
+}
+
+// Seasonality Planner — planned vs actual planting/harvest windows per region+crop.
+// Gate 2 (Gold Standard) cross-references harvest entries against this calendar.
+model SeasonalityPlan {
+  id                  String    @id @default(cuid())
+  region              String
+  cropType            String
+  year                Int
+  plannedPlantingDate DateTime
+  actualPlantingDate  DateTime?
+  windowStart         DateTime // expected harvest window
+  windowEnd           DateTime
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@unique([region, cropType, year])
+}
+
+// Agronomic Performance Table — project vs control (baseline) plots.
+// Yield Increase % = (project − control) / control × 100 per region+crop.
+model HarvestRecord {
+  id              String   @id @default(cuid())
+  farmerId        String?
+  farmer          Farmer?  @relation(fields: [farmerId], references: [id], onDelete: SetNull)
+  region          String
+  cropType        String
+  harvestDate     DateTime
+  weightTonnes    Float
+  moisturePercent Float
+  plotType        String   @default("project") // project | control
+  flagged         Boolean  @default(false)
+  flagReason      String?
+  createdAt       DateTime @default(now())
+}
+
+// Farmer "Carbon Bank" payout ledger — payments and input discounts.
+model Payout {
+  id          String   @id @default(cuid())
+  farmerId    String
+  farmer      Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  date        DateTime
+  amount      Float
+  currency    String   @default("ZAR")
+  type        String   @default("payment") // payment | discount
+  description String
+  createdAt   DateTime @default(now())
+}
+
+// Persisted audit trail (replaces the in-memory ring buffer).
+model AuditEntry {
+  id         String   @id @default(cuid())
+  userId     String
+  userRole   String
+  action     String
+  resource   String
+  resourceId String?
+  method     String
+  path       String
+  statusCode Int
+  ip         String
+  durationMs Int
+  timestamp  DateTime @default(now())
 }

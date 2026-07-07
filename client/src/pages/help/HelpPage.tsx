@@ -3,7 +3,6 @@ import { HelpCircle, Search, ChevronDown, ChevronUp, Mail, Phone, ExternalLink, 
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { cn } from '@/utils/cn'
 import toast from 'react-hot-toast'
 
 const FAQS = [

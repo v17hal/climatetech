@@ -2,9 +2,11 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { X, Leaf, FlaskConical, Droplets, Wind, FileText } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
+import { api, ApiError, OfflineQueuedError } from '@/services/api'
 import type { CarbonRecord, Farmer } from '@/types'
 
 const schema = z.object({
@@ -19,6 +21,7 @@ const schema = z.object({
 })
 
 type FormData = z.infer<typeof schema>
+type FormInput = z.input<typeof schema>
 
 interface Props {
   farmers: Farmer[]
@@ -34,7 +37,7 @@ const fields = [
 ]
 
 export function CarbonEntryModal({ farmers, onClose, onSave }: Props) {
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormInput, unknown, FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       date: new Date().toISOString().split('T')[0],
@@ -47,7 +50,34 @@ export function CarbonEntryModal({ farmers, onClose, onSave }: Props) {
 
   const method = watch('inputMethod')
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
+    /* Try to persist to the API (queued offline when the network is down);
+       the local-state update via onSave always runs so the UI reflects the entry. */
+    try {
+      await api.post(
+        '/api/v1/carbon',
+        {
+          farmerId: data.farmerId,
+          date: data.date,
+          carbonLevel: data.carbonLevel,
+          soilPH: data.soilPH,
+          organicMatter: data.organicMatter,
+          moisture: data.moisture,
+          inputMethod: data.inputMethod,
+          notes: data.notes || undefined,
+        },
+        { offlineQueue: true, description: 'Carbon reading' }
+      )
+      toast.success('Carbon reading saved')
+    } catch (err) {
+      if (err instanceof OfflineQueuedError) {
+        toast.success('Saved offline — will sync when online')
+      } else if (err instanceof ApiError) {
+        toast.error(err.message)
+      } else {
+        toast.error('Could not save to server — kept locally')
+      }
+    }
     onSave({ ...data, inputMethod: data.inputMethod as 'manual' | 'sensor' })
   }
 

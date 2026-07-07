@@ -35,7 +35,7 @@ export function FarmerFormModal({ farmer, onClose, onSave }: Props) {
   const [selectedCrops, setSelectedCrops] = useState<string[]>(farmer?.cropTypes ?? [])
   const [selectedPractices, setSelectedPractices] = useState<string[]>(farmer?.farmingPractices ?? [])
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<z.input<typeof schema>, unknown, FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: '', email: '', phone: '', nationalId: '',

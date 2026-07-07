@@ -138,7 +138,7 @@ export default function LSMPage() {
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie data={distributionData} dataKey="count" nameKey="category" cx="50%" cy="50%"
-                outerRadius={80} innerRadius={48} paddingAngle={3} label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
+                outerRadius={80} innerRadius={48} paddingAngle={3} label={(props) => `${(props as { category?: string }).category} ${((props.percent ?? 0) * 100).toFixed(0)}%`}
                 labelLine={false}>
                 {distributionData.map((_, i) => (
                   <Cell key={i} fill={PIE_COLORS[i]} />

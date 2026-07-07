@@ -1,7 +1,42 @@
 # CarbonSmart Solutions Africa — Farm ERP Project Context
 
-> **Last Updated:** 2026-04-23
-> **Session:** 6 — Remaining features complete
+> **Last Updated:** 2026-07-07
+> **Session:** 8 — Biochar dMRV platform + full frontend↔backend wiring
+
+---
+
+## Session 8 — dMRV Build (2026-07-07)
+
+Pivoted from a UI-only prototype to a working, backend-persisted **biochar carbon-credit dMRV** platform per the "Admin Dashboard" feedback, and wired the existing Farm ERP frontend to the live API.
+
+### Backend (server/)
+- **Prisma schema** extended with dMRV models: `BiocharBatch`, `Shipment`, `ApplicationRecord`, `SoilSample`, `LabResult`, `FieldPhoto`, `SeasonalityPlan`, `HarvestRecord`, `Payout`, `AuditEntry`; `Farmer.boundary` added (JSON polygon). Roles: admin, field_officer, lab_technician, vvb_auditor, farmer (legacy agri_officer→field_officer, viewer→vvb_auditor normalised in auth).
+- **Calculation engine** (`src/services/carbonEngine.ts`, pure/tested): Gross CO₂e = weight×C-org%×3.67; transport deductions (km×diesel factor); net; mass balance; yield-increase % (dry-weight normalised); cars-off-road.
+- **Validation gates** (`src/services/validationGates.ts`): Gate 1 pyrolysis <350°C reject; Gate 2 seasonality ±30-day/crop flag; Gate 3 H:C≥0.7 or heavy-metal fail → reject+lock issuance; evidence locks per dCoC stage; geospatial point-in-polygon trust verifier.
+- **Routes**: biochar (+shipments/applications/mass-balance/ledger), samples (dCoC + lab results), evidence (multer photo/PDF upload → /uploads), harvests (+yield-summary), seasonality, payouts, impact (farmer dashboard feed), passport (PUBLIC). RBAC on every route; VVB auditor read-only platform-wide.
+- **Audit log** now persisted to DB (was in-memory). Error handler is Zod/Prisma-aware.
+- **Seed** (`prisma/seed.ts`): 5 role users + 5 farmers + batches (incl. rejected), shipments, applications, samples across all dCoC states, lab results, harvests (project/control), payouts, seasonality, photos (incl. flagged boundary mismatch) + generated placeholder photo/PDF evidence files.
+- **Tests**: vitest + supertest — **57 passing** (engine, gates, RBAC, full dCoC chain, gate enforcement, passport, access control). `npm test` in server/.
+
+### Frontend (client/)
+- **API client** `src/services/api.ts`: JWT + auto-refresh, offline-queue integration, multipart upload, `fileUrl()`. Auth store holds refresh token + `farmerDbId`. Login/register hit the real API (demo-credential fallback if API down).
+- **New pages**: `pages/dmrv/` (BiocharPage, DCoCPage, CameraLogPage, HarvestPage, SeasonalityPage, LedgerPage), `pages/impact/` (FarmerImpactPage, PassportPublicPage), `pages/lab/LabPortalPage`. Routes + role-based sidebar wired in App.tsx/Sidebar.tsx. Public passport at `/passport/:farmerId` (QR target).
+- **Existing pages wired** to live API (dashboard, farmers, farmer detail, carbon + entry modal w/ offline queue, inventory CRUD, register, header alerts, audit log) with Live/Demo badges + mock fallback.
+- `tsconfig.app.json` `baseUrl` removed (TS6 deprecation); **full build passes** (`tsc -b && vite build`).
+
+### Verified
+- Backend 57/57 tests; live API end-to-end (11/11 flows); browser smoke test 8/8 pages render, 0 console errors.
+
+### New demo credentials (all seeded, DB-backed)
+| Email | Password | Role |
+|---|---|---|
+| admin@carbonsmart.co.za | admin123 | CSSA Admin |
+| officer@carbonsmart.co.za | officer123 | Field Officer |
+| lab@carbonsmart.co.za | lab123 | Lab Technician |
+| auditor@carbonsmart.co.za | auditor123 | VVB Auditor |
+| farmer@carbonsmart.co.za | farmer123 | Farmer |
+
+**Run:** backend `cd server; npm run db:push; npm run db:seed; npm run dev` → :3001. Frontend `cd client; npm run dev` → :5173.
 
 ---
 

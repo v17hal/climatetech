@@ -1,12 +1,15 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Filter, Plus, Download, Eye, Edit2, MapPin, Leaf, Users } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { cn } from '@/utils/cn'
 import { formatDate } from '@/utils/format'
+import { api } from '@/services/api'
+import { fetchFarmers } from '@/services/farmersApi'
 import { mockFarmers, provinceOptions } from '@/data/mockFarmers'
 import type { Farmer } from '@/types'
 import { FarmerFormModal } from './components/FarmerFormModal'
@@ -35,7 +38,18 @@ export default function FarmersPage() {
   const [showModal, setShowModal] = useState(false)
   const [editFarmer, setEditFarmer] = useState<Farmer | null>(null)
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
+  const [live, setLive] = useState(false)
   const PER_PAGE = 8
+
+  useEffect(() => {
+    let cancelled = false
+    fetchFarmers()
+      .then((data) => {
+        if (!cancelled && data.length > 0) { setFarmers(data); setLive(true) }
+      })
+      .catch(() => { /* keep mock data; stay live=false */ })
+    return () => { cancelled = true }
+  }, [])
 
   const filtered = useMemo(() => {
     return farmers.filter((f) => {
@@ -53,6 +67,12 @@ export default function FarmersPage() {
   const handleSave = (data: Partial<Farmer>) => {
     if (editFarmer) {
       setFarmers((prev) => prev.map((f) => f.id === editFarmer.id ? { ...f, ...data } : f))
+      /* When live, sync the status change to the backend (fire-and-forget) */
+      if (live && data.status && data.status !== editFarmer.status) {
+        api.patch(`/api/v1/farmers/${editFarmer.id}/status`, { status: data.status })
+          .then(() => toast.success('Status synced to server'))
+          .catch(() => toast.error('Could not sync status — updated locally only'))
+      }
     } else {
       const newFarmer: Farmer = {
         id: crypto.randomUUID(),
@@ -84,6 +104,7 @@ export default function FarmersPage() {
               <p className="text-xs text-gray-400">{s.label}</p>
             </div>
           ))}
+          <Badge variant={live ? 'green' : 'gray'}>{live ? 'Live data' : 'Demo data'}</Badge>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm">

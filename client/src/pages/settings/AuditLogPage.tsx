@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Shield, Search, Filter, Download, Eye, Edit2, Trash2, LogIn, UserPlus } from 'lucide-react'
-import { Card, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/utils/format'
+import { api } from '@/services/api'
 
 type Action = 'login' | 'create' | 'update' | 'delete' | 'view' | 'register' | 'export'
 
@@ -21,10 +22,33 @@ const ACTION_ICONS: Record<Action, React.ReactNode> = {
   export: <Download size={12} />,
 }
 
-const ACTION_COLORS: Record<Action, 'green' | 'blue' | 'cyan' | 'orange' | 'red' | 'gray'> = {
-  login: 'green', register: 'green', create: 'cyan',
-  view: 'gray', update: 'blue', delete: 'red', export: 'orange',
+/* Live API response shape: GET /api/v1/audit */
+interface ApiAuditEntry {
+  id: string; userId: string; userRole: string
+  action: string; resource: string; resourceId?: string
+  method: string; path: string; statusCode: number
+  ip: string; durationMs: number; timestamp: string
 }
+
+const KNOWN_ACTIONS: Action[] = ['login', 'create', 'update', 'delete', 'view', 'register', 'export']
+
+const toAction = (a: string): Action =>
+  KNOWN_ACTIONS.includes(a as Action) ? (a as Action) : 'view'
+
+const mapApiEntry = (e: ApiAuditEntry): AuditEntry => ({
+  id: e.id,
+  userId: e.userId,
+  userName: e.userId,
+  userRole: e.userRole,
+  action: toAction(e.action),
+  resource: e.resource,
+  resourceId: e.resourceId,
+  detail: `${e.method} ${e.path} → ${e.statusCode}`,
+  ip: e.ip,
+  timestamp: e.timestamp,
+  durationMs: e.durationMs,
+  success: e.statusCode < 400,
+})
 
 /* Mock audit entries */
 const MOCK_ENTRIES: AuditEntry[] = [
@@ -43,11 +67,26 @@ const MOCK_ENTRIES: AuditEntry[] = [
 ]
 
 export default function AuditLogPage() {
+  const [entries, setEntries] = useState<AuditEntry[]>(MOCK_ENTRIES)
+  const [live, setLive] = useState(false)
   const [search, setSearch] = useState('')
   const [actionFilter, setActionFilter] = useState<Action | 'all'>('all')
   const [roleFilter, setRoleFilter] = useState('')
 
-  const filtered = MOCK_ENTRIES.filter((e) => {
+  useEffect(() => {
+    let cancelled = false
+    api.get<{ entries: ApiAuditEntry[]; total: number }>('/api/v1/audit')
+      .then((data) => {
+        if (!cancelled && data.entries.length > 0) {
+          setEntries(data.entries.map(mapApiEntry))
+          setLive(true)
+        }
+      })
+      .catch(() => { /* keep mock data; stay live=false */ })
+    return () => { cancelled = true }
+  }, [])
+
+  const filtered = entries.filter((e) => {
     const q = search.toLowerCase()
     const matchSearch = !q || e.userName.toLowerCase().includes(q) || e.detail.toLowerCase().includes(q) || e.resource.includes(q) || (e.ip.includes(q))
     const matchAction = actionFilter === 'all' || e.action === actionFilter
@@ -56,10 +95,10 @@ export default function AuditLogPage() {
   })
 
   const stats = {
-    total: MOCK_ENTRIES.length,
-    failed: MOCK_ENTRIES.filter((e) => !e.success).length,
-    exports: MOCK_ENTRIES.filter((e) => e.action === 'export').length,
-    deletes: MOCK_ENTRIES.filter((e) => e.action === 'delete').length,
+    total: entries.length,
+    failed: entries.filter((e) => !e.success).length,
+    exports: entries.filter((e) => e.action === 'export').length,
+    deletes: entries.filter((e) => e.action === 'delete').length,
   }
 
   return (
@@ -73,6 +112,7 @@ export default function AuditLogPage() {
             <p className="text-sm font-bold text-[#06192C]">Audit Log</p>
             <p className="text-xs text-gray-400">All platform actions tracked for compliance and security</p>
           </div>
+          <Badge variant={live ? 'green' : 'gray'}>{live ? 'Live data' : 'Demo data'}</Badge>
         </div>
         <Button variant="outline" size="sm">
           <Download size={13} /> Export Log

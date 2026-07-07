@@ -7,6 +7,8 @@ import { User, Mail, Lock, Phone, MapPin, Leaf, ChevronRight, ChevronLeft, Check
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
+import { api, ApiError } from '@/services/api'
+import type { User as AuthUser } from '@/types'
 import { cn } from '@/utils/cn'
 import toast from 'react-hot-toast'
 
@@ -55,7 +57,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
 
   const form1 = useForm<Step1>({ resolver: zodResolver(step1Schema) })
-  const form2 = useForm<Step2>({ resolver: zodResolver(step2Schema) })
+  const form2 = useForm<z.input<typeof step2Schema>, unknown, Step2>({ resolver: zodResolver(step2Schema) })
   const form3 = useForm<Step3>({ resolver: zodResolver(step3Schema) })
 
   const toggleCrop = (crop: string) =>
@@ -64,23 +66,57 @@ export default function RegisterPage() {
   const onStep1 = (data: Step1) => { setStep1Data(data); setStep(1) }
   const onStep2 = (data: Step2) => { setStep2Data(data); setStep(2) }
 
-  const onStep3 = async (_data: Step3) => {
+  const onStep3 = async (data: Step3) => {
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 1200))
-    const farmerId = `CSA-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`
-    login(
-      {
-        id: crypto.randomUUID(),
-        name: step1Data!.name,
-        email: step1Data!.email,
-        role: 'farmer',
-        farmerId,
-      },
-      'demo-jwt-token'
-    )
-    toast.success(`Welcome, ${step1Data!.name.split(' ')[0]}! Your Farmer ID is ${farmerId}`)
-    navigate('/dashboard')
-    setLoading(false)
+    try {
+      const res = await api.post<{ user: AuthUser; access: string; refresh: string }>(
+        '/api/v1/auth/register',
+        {
+          name: step1Data!.name,
+          email: step1Data!.email,
+          password: data.password,
+          phone: step1Data!.phone,
+          nationalId: step1Data!.nationalId,
+          farmName: step2Data!.farmName,
+          farmSize: Number(step2Data!.farmSize),
+          province: step2Data!.province,
+          district: step2Data!.district,
+          cropTypes: selectedCrops,
+          farmingPractices: [],
+        }
+      )
+      login(res.user, res.access, res.refresh)
+      toast.success(`Welcome, ${res.user.name.split(' ')[0]}! Your Farmer ID is ${res.user.farmerId}`)
+      navigate('/dashboard')
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.status === 409) {
+          toast.error('Email already registered')
+        } else if (err.status === 422) {
+          const body = err.body as { issues?: { path: string; message: string }[] }
+          toast.error(body?.issues?.[0]?.message ?? 'Validation failed')
+        } else {
+          toast.error(err.message)
+        }
+      } else {
+        /* API unreachable — keep the demo enrollment flow working offline */
+        const farmerId = `CSA-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`
+        login(
+          {
+            id: crypto.randomUUID(),
+            name: step1Data!.name,
+            email: step1Data!.email,
+            role: 'farmer',
+            farmerId,
+          },
+          'demo-jwt-token'
+        )
+        toast.success(`Welcome, ${step1Data!.name.split(' ')[0]}! Your Farmer ID is ${farmerId} (offline demo mode)`)
+        navigate('/dashboard')
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

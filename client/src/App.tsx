@@ -29,6 +29,19 @@ import SettingsPage from '@/pages/settings/SettingsPage'
 import AuditLogPage from '@/pages/settings/AuditLogPage'
 import HelpPage from '@/pages/help/HelpPage'
 
+/* dMRV — Biochar Registry & Operations */
+import BiocharPage from '@/pages/dmrv/BiocharPage'
+import DCoCPage from '@/pages/dmrv/DCoCPage'
+import CameraLogPage from '@/pages/dmrv/CameraLogPage'
+import HarvestPage from '@/pages/dmrv/HarvestPage'
+import SeasonalityPage from '@/pages/dmrv/SeasonalityPage'
+import LedgerPage from '@/pages/dmrv/LedgerPage'
+
+/* Farmer Value & Impact, Lab Portal, Public Passport */
+import FarmerImpactPage from '@/pages/impact/FarmerImpactPage'
+import PassportPublicPage from '@/pages/impact/PassportPublicPage'
+import LabPortalPage from '@/pages/lab/LabPortalPage'
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -50,6 +63,9 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+        {/* Public Sustainable Farm Passport (QR target — no auth) */}
+        <Route path="/passport/:farmerId" element={<PassportPublicPage />} />
 
         {/* Protected app — guarded by AppLayout (redirects to /login if unauthenticated) */}
         <Route element={<AppLayout />}>
@@ -76,6 +92,18 @@ export default function App() {
           <Route path="/smart/weather" element={<WeatherPage />} />
           <Route path="/smart/inventory" element={<InventoryPage />} />
           <Route path="/smart/financials" element={<FinancialsPage />} />
+
+          {/* dMRV: Biochar Registry & Operations */}
+          <Route path="/dmrv/biochar" element={<BiocharPage />} />
+          <Route path="/dmrv/dcoc" element={<DCoCPage />} />
+          <Route path="/dmrv/camera-log" element={<CameraLogPage />} />
+          <Route path="/dmrv/harvest" element={<HarvestPage />} />
+          <Route path="/dmrv/seasonality" element={<SeasonalityPage />} />
+          <Route path="/dmrv/ledger" element={<LedgerPage />} />
+
+          {/* Farmer Value & Impact + Lab Portal */}
+          <Route path="/impact" element={<FarmerImpactPage />} />
+          <Route path="/lab" element={<LabPortalPage />} />
 
           {/* Module 9: Analytics & Reporting */}
           <Route path="/analytics" element={<AnalyticsPage />} />

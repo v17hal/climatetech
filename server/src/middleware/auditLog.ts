@@ -1,47 +1,33 @@
 import type { Response, NextFunction } from 'express'
 import type { AuthRequest } from './auth'
+import { prisma } from '../lib/prisma'
 
-export interface AuditEntry {
-  id: string
-  userId: string
-  userRole: string
-  action: string
-  resource: string
-  resourceId?: string
-  method: string
-  path: string
-  statusCode: number
-  ip: string
-  timestamp: string
-  durationMs: number
-}
-
-/* In-memory store for demo — replace with DB insert in production */
-export const auditLog: AuditEntry[] = []
-
+/**
+ * Persists every authenticated request to the AuditEntry table so the
+ * trail survives restarts and is queryable by VVB auditors.
+ */
 export function auditMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
   const start = Date.now()
 
   res.on('finish', () => {
-    if (!req.userId) { next(); return }
+    if (!req.userId) return
 
-    const entry: AuditEntry = {
-      id: crypto.randomUUID(),
-      userId: req.userId ?? 'anonymous',
-      userRole: req.userRole ?? 'unknown',
-      action: resolveAction(req.method, req.path),
-      resource: resolveResource(req.path),
-      resourceId: req.params?.id,
-      method: req.method,
-      path: req.path,
-      statusCode: res.statusCode,
-      ip: req.ip ?? 'unknown',
-      timestamp: new Date().toISOString(),
-      durationMs: Date.now() - start,
-    }
-
-    auditLog.unshift(entry)
-    if (auditLog.length > 500) auditLog.pop()
+    prisma.auditEntry
+      .create({
+        data: {
+          userId: req.userId,
+          userRole: req.userRole ?? 'unknown',
+          action: resolveAction(req.method, req.path),
+          resource: resolveResource(req.path),
+          resourceId: req.params?.id ? String(req.params.id) : undefined,
+          method: req.method,
+          path: req.path,
+          statusCode: res.statusCode,
+          ip: req.ip ?? 'unknown',
+          durationMs: Date.now() - start,
+        },
+      })
+      .catch((err) => console.error('Audit write failed:', err))
   })
 
   next()

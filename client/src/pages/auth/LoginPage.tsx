@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import { api, ApiError } from '@/services/api'
+import { landingPathForRole } from '@/utils/roleLanding'
 import type { User } from '@/types'
 import toast from 'react-hot-toast'
 
@@ -49,7 +50,7 @@ export default function LoginPage() {
       const res = await api.post<LoginResponse>('/api/v1/auth/login', data)
       login(res.user, res.access, res.refresh)
       toast.success(`Welcome back, ${res.user.name.split(' ')[0]}!`)
-      navigate('/dashboard')
+      navigate(landingPathForRole(res.user.role))
     } catch (err) {
       if (err instanceof ApiError) {
         toast.error(err.message)
@@ -70,7 +71,7 @@ export default function LoginPage() {
             'demo-jwt-token'
           )
           toast.success(`Welcome back, ${matched.name.split(' ')[0]}! (offline demo mode)`)
-          navigate('/dashboard')
+          navigate(landingPathForRole(matched.role))
         } else {
           toast.error('API unreachable and no matching demo credentials')
         }

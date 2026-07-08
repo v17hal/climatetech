@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import { api, ApiError } from '@/services/api'
+import { landingPathForRole } from '@/utils/roleLanding'
 import type { User as AuthUser } from '@/types'
 import { cn } from '@/utils/cn'
 import toast from 'react-hot-toast'
@@ -87,7 +88,7 @@ export default function RegisterPage() {
       )
       login(res.user, res.access, res.refresh)
       toast.success(`Welcome, ${res.user.name.split(' ')[0]}! Your Farmer ID is ${res.user.farmerId}`)
-      navigate('/dashboard')
+      navigate(landingPathForRole('farmer'))
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 409) {
@@ -112,7 +113,7 @@ export default function RegisterPage() {
           'demo-jwt-token'
         )
         toast.success(`Welcome, ${step1Data!.name.split(' ')[0]}! Your Farmer ID is ${farmerId} (offline demo mode)`)
-        navigate('/dashboard')
+        navigate(landingPathForRole('farmer'))
       }
     } finally {
       setLoading(false)

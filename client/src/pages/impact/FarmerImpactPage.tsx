@@ -290,12 +290,14 @@ export default function FarmerImpactPage() {
                   </CardHeader>
                   {waterPercent !== null ? (
                     <div className="flex flex-col gap-3">
-                      <p className="text-4xl font-bold text-[#22B3DB]">
-                        +{waterPercent}%
+                      <p className={`text-4xl font-bold ${waterPercent >= 0 ? 'text-[#22B3DB]' : 'text-orange-500'}`}>
+                        {waterPercent > 0 ? '+' : ''}{waterPercent}%
                         <span className="text-sm font-semibold text-gray-400 ml-2">Water Retention</span>
                       </p>
                       <p className="text-xs text-gray-500">
-                        Your soil holds more water — you can irrigate less.
+                        {waterPercent >= 0
+                          ? 'Your soil holds more water — you can irrigate less.'
+                          : 'Water retention is being monitored across your next soil samples.'}
                       </p>
                     </div>
                   ) : (

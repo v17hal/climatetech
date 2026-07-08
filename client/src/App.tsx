@@ -1,6 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { useAuthStore } from '@/store/authStore'
+import { landingPathForRole } from '@/utils/roleLanding'
+
+/* Redirect "/" and unknown paths to the user's role-appropriate landing page
+   (or /login if not authenticated). */
+function RoleLanding() {
+  const { isAuthenticated, user } = useAuthStore()
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  return <Navigate to={landingPathForRole(user?.role)} replace />
+}
 
 /* Auth */
 import LoginPage from '@/pages/auth/LoginPage'
@@ -116,9 +126,9 @@ export default function App() {
           <Route path="/help" element={<HelpPage />} />
         </Route>
 
-        {/* Root redirect */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* Root + catch-all → role-appropriate landing page */}
+        <Route path="/" element={<RoleLanding />} />
+        <Route path="*" element={<RoleLanding />} />
       </Routes>
     </BrowserRouter>
   )

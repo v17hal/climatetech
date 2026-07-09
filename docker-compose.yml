@@ -1,0 +1,52 @@
+# ── CarbonSmart — biochar dMRV platform ─────────────────────────────
+# Exposed on the host as:
+#   frontend  http://<host>:8090
+#   API       http://<host>:8091
+# Isolated on its own bridge network; does not touch other projects.
+services:
+  carbonsmart-api:
+    build:
+      context: ./server
+    image: carbonsmart-api:latest
+    container_name: carbonsmart-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      DATABASE_URL: "file:/app/data/prod.db"
+      JWT_SECRET: "${JWT_SECRET}"
+      JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET}"
+      # Browser origin allowed to call the API (frontend host:port)
+      CORS_ORIGIN: "${PUBLIC_ORIGIN}"
+    volumes:
+      - carbonsmart-data:/app/data
+      - carbonsmart-uploads:/app/uploads
+    ports:
+      # Public — the browser (SPA) calls the API directly at host:8091
+      - "8091:3001"
+    networks:
+      - carbonsmart
+
+  carbonsmart-app:
+    build:
+      context: ./client
+      args:
+        # Baked into the Vite bundle at build time
+        VITE_API_URL: "${PUBLIC_API_URL}"
+    image: carbonsmart-app:latest
+    container_name: carbonsmart-app
+    restart: unless-stopped
+    depends_on:
+      - carbonsmart-api
+    ports:
+      - "8090:80"
+    networks:
+      - carbonsmart
+
+volumes:
+  carbonsmart-data:
+  carbonsmart-uploads:
+
+networks:
+  carbonsmart:
+    driver: bridge

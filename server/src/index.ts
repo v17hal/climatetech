@@ -45,7 +45,9 @@ const limiter = rateLimit({
 })
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  // Configurable — kept generous for demo/QA (many logins across 5 roles).
+  // Tighten via AUTH_RATE_LIMIT for production.
+  max: Number(process.env.AUTH_RATE_LIMIT ?? 200),
   message: { error: 'Too many auth attempts — please try again in 15 minutes' },
   skip: () => process.env.NODE_ENV === 'test',
 })

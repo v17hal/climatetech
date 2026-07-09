@@ -4,6 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 export default defineConfig({
+  // Served under a sub-path in prod (e.g. /carbonsmart/) behind a shared nginx.
+  base: process.env.VITE_BASE_PATH ?? '/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

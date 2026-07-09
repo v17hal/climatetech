@@ -22,8 +22,8 @@ services:
       - carbonsmart-data:/app/data
       - carbonsmart-uploads:/app/uploads
     ports:
-      # Public — the browser (SPA) calls the API directly at host:8091
-      - "8091:3001"
+      # Bound to localhost — the shared host nginx reverse-proxies /carbonsmart-api/ to it
+      - "127.0.0.1:8091:3001"
     networks:
       - carbonsmart
 
@@ -33,13 +33,15 @@ services:
       args:
         # Baked into the Vite bundle at build time
         VITE_API_URL: "${PUBLIC_API_URL}"
+        VITE_BASE_PATH: "${PUBLIC_BASE_PATH:-/carbonsmart/}"
     image: carbonsmart-app:latest
     container_name: carbonsmart-app
     restart: unless-stopped
     depends_on:
       - carbonsmart-api
     ports:
-      - "8090:80"
+      # Bound to localhost — the shared host nginx reverse-proxies to it
+      - "127.0.0.1:8090:80"
     networks:
       - carbonsmart
 

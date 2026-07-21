@@ -45,12 +45,16 @@ export function useOfflineSync() {
     }
   }, [doSync, refreshCount])
 
-  /* Register service worker */
+  /* Register service worker — path + scope relative to the app base URL
+     so it works when the app is served under a sub-path (e.g. /carbonsmart/). */
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {
-        /* Silently ignore in dev if sw registration fails */
-      })
+      const base = import.meta.env.BASE_URL || '/'
+      navigator.serviceWorker
+        .register(`${base}sw.js`, { scope: base })
+        .catch(() => {
+          /* Silently ignore in dev if sw registration fails */
+        })
     }
   }, [])
 

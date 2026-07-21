@@ -1,20 +1,24 @@
-/* CarbonSmart Service Worker */
-const CACHE_NAME = 'carbonsmart-v1'
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-]
+/* CarbonSmart Service Worker
+   Scope-relative so it works whether the app is served at "/" or under a
+   sub-path like "/carbonsmart/". Paths are derived from the SW's own scope. */
+const CACHE_NAME = 'carbonsmart-v2'
 
-/* Install — cache static shell */
+/* Base path = the registration scope's pathname (e.g. "/" or "/carbonsmart/"). */
+const BASE = new URL(self.registration.scope).pathname
+const INDEX = `${BASE}index.html`
+const STATIC_ASSETS = [BASE, INDEX, `${BASE}manifest.json`]
+
+/* Install — cache static shell (ignore individual failures) */
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(STATIC_ASSETS.map((a) => cache.add(a)))
+    )
   )
   self.skipWaiting()
 })
 
-/* Activate — clean old caches */
+/* Activate — clean old caches (purges the old carbonsmart-v1 shell) */
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -26,15 +30,15 @@ self.addEventListener('activate', (event) => {
 
 /* Fetch strategy:
    - API calls: network-first, fallback to cache
+   - Navigation: network-first, SPA fallback to cached index.html
    - Static assets: cache-first
-   - Navigation: serve index.html (SPA fallback)
 */
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
   /* API: network-first */
-  if (url.pathname.startsWith('/api/')) {
+  if (url.pathname.includes('/api/')) {
     event.respondWith(
       fetch(request)
         .then((res) => {
@@ -50,11 +54,11 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  /* Navigation: SPA fallback */
+  /* Navigation: network-first so fresh deploys are picked up; SPA fallback offline */
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request).catch(() =>
-        caches.match('/index.html').then((cached) => cached ?? fetch('/index.html'))
+        caches.match(INDEX).then((cached) => cached ?? fetch(INDEX))
       )
     )
     return

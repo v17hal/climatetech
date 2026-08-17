@@ -66,6 +66,7 @@ async function main() {
   await prisma.seasonalityPlan.deleteMany()
   await prisma.alert.deleteMany()
   await prisma.carbonRecord.deleteMany()
+  await prisma.baselineTest.deleteMany()
   await prisma.inventoryItem.deleteMany()
   await prisma.irrigationLog.deleteMany()
   await prisma.pestReport.deleteMany()
@@ -120,6 +121,25 @@ async function main() {
   }
   const john = farmers['CSA-2024-00001']
   const grace = farmers['CSA-2025-00004']
+
+  /* ── Field-officer delegation (Field #2) ────────────────────────
+     Amara (officer) is delegated 3 of the 5 farms — she only sees these.
+     Nkosi & Pieter are left unassigned to demonstrate scoping. */
+  for (const fid of ['CSA-2024-00001', 'CSA-2025-00004', 'CSA-2025-00005']) {
+    await prisma.farmer.update({
+      where: { id: farmers[fid].id },
+      data: { assignedOfficerId: officer.id },
+    })
+  }
+
+  /* ── Baseline tests (Field #1) — soil state BEFORE biochar ─────── */
+  await prisma.baselineTest.createMany({
+    data: [
+      { farmerId: john.id, testDate: new Date('2025-10-05'), soilPH: 5.4, organicMatter: 2.8, moisture: 18, soilCarbon: 1.9, temperature: 22.5, labName: 'SGS', testedBy: 'Amara Osei', notes: 'Pre-biochar baseline, Maize field A' },
+      { farmerId: grace.id, testDate: new Date('2025-11-20'), soilPH: 5.1, organicMatter: 3.1, moisture: 24, soilCarbon: 2.2, temperature: 24.0, labName: 'SGS', testedBy: 'Amara Osei', notes: 'Pre-biochar baseline, rice paddies' },
+      { farmerId: farmers['CSA-2025-00005'].id, testDate: new Date('2025-10-18'), soilPH: 5.6, organicMatter: 2.4, moisture: 15, soilCarbon: 1.6, temperature: 23.2, labName: 'SGS', testedBy: 'Amara Osei', notes: 'Pre-biochar baseline, smallholding' },
+    ],
+  })
 
   /* ── Seasonality planner (2026) ─────────────────────────────── */
   const plans = [
@@ -230,8 +250,13 @@ async function main() {
     data: {
       sampleCode: 'SS-2026-0001', batchId: batchGood.id, farmerId: grace.id,
       photoId: photos[2], status: 'results_entered', waybillNumber: 'TRK-55210',
-      labReceivedAt: new Date('2026-03-14'), assignedLabTechId: labTech.id,
-      sampledAt: new Date('2026-03-10'),
+      assignedLabTechId: labTech.id,
+      sampledByName: 'Amara Osei', sampledAt: new Date('2026-03-10'),
+      collectedByName: 'Amara Osei', collectedAt: new Date('2026-03-11'),
+      deliveredByName: 'DHL Courier (SGS run)', deliveredAt: new Date('2026-03-13'),
+      labReceivedAt: new Date('2026-03-14'),
+      packagingType: 'Sealed sterile sample bag + insulated cool box',
+      packagingTempC: 4.5,
     },
   })
   await prisma.labResult.create({
@@ -248,8 +273,13 @@ async function main() {
     data: {
       sampleCode: 'SS-2026-0002', batchId: batchGood2.id, farmerId: john.id,
       photoId: photos[3], status: 'results_entered', waybillNumber: 'TRK-55411',
-      labReceivedAt: new Date('2026-04-16'), assignedLabTechId: labTech.id,
-      sampledAt: new Date('2026-04-12'),
+      assignedLabTechId: labTech.id,
+      sampledByName: 'Amara Osei', sampledAt: new Date('2026-04-12'),
+      collectedByName: 'Amara Osei', collectedAt: new Date('2026-04-13'),
+      deliveredByName: 'DHL Courier (SGS run)', deliveredAt: new Date('2026-04-15'),
+      labReceivedAt: new Date('2026-04-16'),
+      packagingType: 'Sealed sterile sample bag + insulated cool box',
+      packagingTempC: 5.0,
     },
   })
   await prisma.labResult.create({
@@ -266,8 +296,13 @@ async function main() {
     data: {
       sampleCode: 'SS-2026-0003', batchId: batchRejected.id, farmerId: john.id,
       photoId: photos[1], status: 'rejected', waybillNumber: 'TRK-56002',
-      labReceivedAt: new Date('2026-05-01'), assignedLabTechId: labTech.id,
-      sampledAt: new Date('2026-04-25'),
+      assignedLabTechId: labTech.id,
+      sampledByName: 'Amara Osei', sampledAt: new Date('2026-04-25'),
+      collectedByName: 'Amara Osei', collectedAt: new Date('2026-04-27'),
+      deliveredByName: 'DHL Courier (SGS run)', deliveredAt: new Date('2026-04-30'),
+      labReceivedAt: new Date('2026-05-01'),
+      packagingType: 'Sealed sterile sample bag + insulated cool box',
+      packagingTempC: 6.2,
     },
   })
   await prisma.labResult.create({
@@ -284,8 +319,13 @@ async function main() {
     data: {
       sampleCode: 'SS-2026-0004', batchId: batchPending.id, farmerId: farmers['CSA-2024-00002'].id,
       photoId: photos[5], status: 'lab_received', waybillNumber: 'TRK-56377',
-      labReceivedAt: new Date('2026-06-28'), assignedLabTechId: labTech.id,
-      sampledAt: new Date('2026-06-24'),
+      assignedLabTechId: labTech.id,
+      sampledByName: 'Amara Osei', sampledAt: new Date('2026-06-24'),
+      collectedByName: 'Amara Osei', collectedAt: new Date('2026-06-25'),
+      deliveredByName: 'Regional courier', deliveredAt: new Date('2026-06-27'),
+      labReceivedAt: new Date('2026-06-28'),
+      packagingType: 'Sealed sterile sample bag + insulated cool box',
+      packagingTempC: 5.5,
     },
   })
   // Yellow — sampled in field only
@@ -293,7 +333,9 @@ async function main() {
     data: {
       sampleCode: 'SS-2026-0005', farmerId: john.id,
       photoId: photos[0], status: 'sampled',
-      sampledAt: new Date('2026-07-01'),
+      sampledByName: 'Amara Osei', sampledAt: new Date('2026-07-01'),
+      packagingType: 'Sealed sterile sample bag',
+      packagingTempC: 8.0,
     },
   })
 
@@ -331,6 +373,7 @@ async function main() {
           soilPH: 5.8 + (m % 3) * 0.2,
           organicMatter: 3.2 + m * 0.15,
           moisture: 22 + (m % 4) * 2,
+          temperature: 21 + (m % 5) * 1.4 + i * 0.3,
           inputMethod: m % 3 === 0 ? 'sensor' : 'manual',
         },
       })
@@ -340,10 +383,11 @@ async function main() {
   /* ── Inventory, irrigation, pests, financials ───────────────── */
   await prisma.inventoryItem.createMany({
     data: [
-      { farmerId: john.id, name: 'Maize seed (SC701)', category: 'seed', quantity: 240, unit: 'kg', reorderLevel: 100 },
-      { farmerId: john.id, name: 'Organic fertiliser', category: 'fertilizer', quantity: 60, unit: 'bags', reorderLevel: 80 },
-      { farmerId: john.id, name: 'Biochar stock', category: 'other', quantity: 4.5, unit: 'tonnes', reorderLevel: 2 },
-      { farmerId: grace.id, name: 'Rice seedlings', category: 'seed', quantity: 500, unit: 'trays', reorderLevel: 150 },
+      { farmerId: john.id, name: 'Maize seed (SC701) — used', category: 'seed', quantity: 240, unit: 'kg', reorderLevel: 100 },
+      { farmerId: john.id, name: 'Maize (harvested)', category: 'crop', quantity: 58, unit: 'tonnes', reorderLevel: 0 },
+      { farmerId: grace.id, name: 'Rice seedlings — used', category: 'seed', quantity: 500, unit: 'trays', reorderLevel: 150 },
+      { farmerId: grace.id, name: 'Rice (harvested)', category: 'crop', quantity: 21, unit: 'tonnes', reorderLevel: 0 },
+      { farmerId: farmers['CSA-2025-00005'].id, name: 'Broiler chickens', category: 'livestock', quantity: 320, unit: 'birds', reorderLevel: 0 },
     ],
   })
   await prisma.irrigationLog.createMany({

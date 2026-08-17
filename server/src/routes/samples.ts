@@ -31,6 +31,10 @@ const createSchema = z.object({
   farmerId: z.string().optional(),
   photoId: z.string().min(1),
   assignedLabTechId: z.string().optional(),
+  // Custody chain (Admin #4)
+  sampledByName: z.string().optional(),
+  packagingType: z.string().optional(),
+  packagingTempC: z.number().optional(),
 })
 
 /*
@@ -56,6 +60,9 @@ router.post('/', requireRole('admin', 'field_officer'), async (req, res, next) =
         farmerId: body.farmerId ?? photo!.farmerId,
         photoId: body.photoId,
         assignedLabTechId: body.assignedLabTechId,
+        sampledByName: body.sampledByName,
+        packagingType: body.packagingType,
+        packagingTempC: body.packagingTempC,
         status: 'sampled',
       },
       include: { photo: true },
@@ -68,6 +75,43 @@ router.post('/', requireRole('admin', 'field_officer'), async (req, res, next) =
       })
     }
     res.status(201).json(sample)
+  } catch (err) { next(err) }
+})
+
+/* Custody stage: collected from the field (Admin #4). */
+router.patch('/:id/collect', requireRole('admin', 'field_officer'), async (req, res, next) => {
+  try {
+    const body = z.object({
+      collectedByName: z.string().min(2),
+      packagingType: z.string().optional(),
+      packagingTempC: z.number().optional(),
+    }).parse(req.body)
+    const sample = await prisma.soilSample.findUnique({ where: { id: String(req.params.id) } })
+    if (!sample) { res.status(404).json({ error: 'Sample not found' }); return }
+    const updated = await prisma.soilSample.update({
+      where: { id: sample.id },
+      data: {
+        collectedByName: body.collectedByName,
+        collectedAt: new Date(),
+        ...(body.packagingType ? { packagingType: body.packagingType } : {}),
+        ...(body.packagingTempC != null ? { packagingTempC: body.packagingTempC } : {}),
+      },
+    })
+    res.json(updated)
+  } catch (err) { next(err) }
+})
+
+/* Custody stage: delivered to the lab (Admin #4). */
+router.patch('/:id/deliver', requireRole('admin', 'field_officer'), async (req, res, next) => {
+  try {
+    const body = z.object({ deliveredByName: z.string().min(2) }).parse(req.body)
+    const sample = await prisma.soilSample.findUnique({ where: { id: String(req.params.id) } })
+    if (!sample) { res.status(404).json({ error: 'Sample not found' }); return }
+    const updated = await prisma.soilSample.update({
+      where: { id: sample.id },
+      data: { deliveredByName: body.deliveredByName, deliveredAt: new Date() },
+    })
+    res.json(updated)
   } catch (err) { next(err) }
 })
 

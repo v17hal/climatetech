@@ -10,16 +10,17 @@ datasource db {
 // Roles: admin | field_officer | lab_technician | vvb_auditor | farmer
 // (legacy aliases accepted at the API layer: agri_officer → field_officer, viewer → vvb_auditor)
 model User {
-  id          String       @id @default(cuid())
-  name        String
-  email       String       @unique
-  password    String
-  role        String       @default("farmer")
-  farmer      Farmer?
-  labResults  LabResult[]  @relation("EnteredBy")
-  fieldPhotos FieldPhoto[] @relation("UploadedBy")
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id            String       @id @default(cuid())
+  name          String
+  email         String       @unique
+  password      String
+  role          String       @default("farmer")
+  farmer        Farmer?
+  assignedFarms Farmer[]     @relation("OfficerFarms")
+  labResults    LabResult[]  @relation("EnteredBy")
+  fieldPhotos   FieldPhoto[] @relation("UploadedBy")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model Farmer {
@@ -43,7 +44,11 @@ model Farmer {
   lsmScore         Int?
   lsmCategory      String?
   status           String   @default("pending")
+  // Field-officer delegation (Field #2): an officer only sees farms assigned to them.
+  assignedOfficerId String?
+  assignedOfficer   User?    @relation("OfficerFarms", fields: [assignedOfficerId], references: [id], onDelete: SetNull)
   carbonRecords    CarbonRecord[]
+  baselineTests    BaselineTest[]
   alerts           Alert[]
   inventoryItems   InventoryItem[]
   irrigationLogs   IrrigationLog[]
@@ -67,7 +72,25 @@ model CarbonRecord {
   soilPH        Float
   organicMatter Float
   moisture      Float
+  temperature   Float?   // soil temperature °C (Field #9 analytics)
   inputMethod   String   @default("manual")
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+// Baseline soil test taken BEFORE biochar application, per farm (Field #1).
+model BaselineTest {
+  id            String   @id @default(cuid())
+  farmerId      String
+  farmer        Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  testDate      DateTime
+  soilPH        Float
+  organicMatter Float
+  moisture      Float
+  soilCarbon    Float
+  temperature   Float?
+  labName       String   @default("SGS")
+  testedBy      String?
   notes         String?
   createdAt     DateTime @default(now())
 }
@@ -190,7 +213,9 @@ model ApplicationRecord {
 }
 
 // Chain of Custody Table — dCoC traffic light per soil sample:
-// sampled (yellow) → lab_received (orange) → results_entered (green) | rejected | flagged
+// sampled (yellow) → collected → delivered → lab_received (orange) → results_entered (green) | rejected
+// Full custody chain (Admin #4): every stage records who handled it, when,
+// how it was packaged and the container/environment temperature.
 model SoilSample {
   id                String       @id @default(cuid())
   sampleCode        String       @unique // SS-YYYY-NNNN
@@ -202,10 +227,19 @@ model SoilSample {
   photoId           String?      @unique
   photo             FieldPhoto?  @relation(fields: [photoId], references: [id])
   waybillNumber     String?
-  labReceivedAt     DateTime?
   assignedLabTechId String?
   labResult         LabResult?
+  // ── Custody chain: who + when at each stage ──
+  sampledByName     String?      // field officer who took the sample
   sampledAt         DateTime     @default(now())
+  collectedByName   String?      // who collected it from the field
+  collectedAt       DateTime?
+  deliveredByName   String?      // who delivered it to the lab
+  deliveredAt       DateTime?
+  labReceivedAt     DateTime?    // received at the lab
+  // ── Packaging & cold-chain ──
+  packagingType     String?      // e.g. "Sealed sterile sample bag + cool box"
+  packagingTempC    Float?       // temperature of the packaging/environment (°C)
   updatedAt         DateTime     @updatedAt
 }
 

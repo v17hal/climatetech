@@ -264,7 +264,7 @@ export default function HarvestPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-50">
-                    {['Date', 'Region', 'Crop', 'Farmer', 'Weight', 'Moisture', 'Plot Type', 'Flag'].map((h) => (
+                    {['Date', 'Region', 'Crop', 'Farm', 'Weight', 'Moisture', 'Plot Type', 'Flag'].map((h) => (
                       <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                     ))}
                   </tr>

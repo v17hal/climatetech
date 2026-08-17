@@ -20,6 +20,15 @@ interface MassBalanceTotals {
   remaining: number
 }
 
+interface AppliedByFarmer {
+  farmerId: string
+  farmName: string
+  province: string
+  tonnesApplied: number
+  applications: number
+  batches: { batchNumber: string; date: string; weightTonnes: number }[]
+}
+
 interface FarmerOption {
   id: string
   farmerId: string
@@ -72,6 +81,7 @@ export default function BiocharPage() {
 
   const [batches, setBatches] = useState<BiocharBatch[]>([])
   const [balance, setBalance] = useState<MassBalanceTotals | null>(null)
+  const [appliedByFarmer, setAppliedByFarmer] = useState<AppliedByFarmer[]>([])
   const [farmers, setFarmers] = useState<FarmerOption[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -93,12 +103,14 @@ export default function BiocharPage() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [list, mb] = await Promise.all([
+      const [list, mb, applied] = await Promise.all([
         api.get<BiocharBatch[]>('/api/v1/biochar'),
         api.get<MassBalanceTotals>('/api/v1/biochar/mass-balance'),
+        api.get<AppliedByFarmer[]>('/api/v1/biochar/applied-by-farmer'),
       ])
       setBatches(list)
       setBalance(mb)
+      setAppliedByFarmer(applied)
       setLoadError(null)
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Network error — backend unreachable')
@@ -287,6 +299,42 @@ export default function BiocharPage() {
                       <td className="px-5 py-3 text-xs font-semibold text-[#40BBB9] whitespace-nowrap">{fmt1(b.computed?.massBalance.remaining ?? 0)} t</td>
                       <td className="px-5 py-3">
                         <Button variant="ghost" size="sm" onClick={() => openManage(b.id)}>Manage</Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Biochar applied per farmer (Admin production-log requirement) */}
+          <Card padding="none">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <CardTitle>Biochar Applied per Farmer</CardTitle>
+              <p className="text-xs text-gray-400 mt-0.5">How much biochar has been applied to each farm, across all batches.</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-50">
+                    {['Farm', 'Farmer ID', 'Province', 'Biochar Applied', 'Applications', 'Batches'].map((h) => (
+                      <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {appliedByFarmer.length === 0 && (
+                    <tr><td colSpan={6} className="px-5 py-8 text-center text-xs text-gray-400">No biochar applied to farms yet.</td></tr>
+                  )}
+                  {appliedByFarmer.map((f) => (
+                    <tr key={f.farmerId} className="border-b border-gray-50 hover:bg-[#F4F8F6] transition-colors">
+                      <td className="px-5 py-3 text-xs font-semibold text-[#06192C] whitespace-nowrap">{f.farmName}</td>
+                      <td className="px-5 py-3 text-xs font-mono text-gray-500 whitespace-nowrap">{f.farmerId}</td>
+                      <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{f.province}</td>
+                      <td className="px-5 py-3 text-xs font-bold text-[#40BBB9] whitespace-nowrap">{fmt1(f.tonnesApplied)} t</td>
+                      <td className="px-5 py-3 text-xs text-gray-500">{f.applications}</td>
+                      <td className="px-5 py-3 text-xs text-gray-400 whitespace-nowrap">
+                        {f.batches.map((b) => b.batchNumber).join(', ')}
                       </td>
                     </tr>
                   ))}

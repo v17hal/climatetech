@@ -215,14 +215,14 @@ export default function DCoCPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-50">
-                    {['Sample Code', 'Batch', 'Farmer', 'Status', 'Waybill #', 'Sampled At', 'Photo', 'Lab Result', 'Certificate'].map((h) => (
+                    {['Sample Code', 'Batch', 'Farmer', 'Status', 'Waybill #', 'GPS Coordinates', 'Sampled At', 'Photo', 'Lab Result', 'Certificate'].map((h) => (
                       <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {samples.length === 0 && (
-                    <tr><td colSpan={9} className="px-5 py-8 text-center text-xs text-gray-400">No samples logged yet.</td></tr>
+                    <tr><td colSpan={10} className="px-5 py-8 text-center text-xs text-gray-400">No samples logged yet.</td></tr>
                   )}
                   {samples.map((s) => (
                     <tr key={s.id} className="border-b border-gray-50 hover:bg-[#F4F8F6] transition-colors">
@@ -242,6 +242,21 @@ export default function DCoCPage() {
                         </span>
                       </td>
                       <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{s.waybillNumber ?? '—'}</td>
+                      <td className="px-5 py-3 text-xs whitespace-nowrap">
+                        {s.photo ? (
+                          <a
+                            href={`https://www.google.com/maps?q=${s.photo.latitude},${s.photo.longitude}`}
+                            target="_blank" rel="noreferrer"
+                            className="inline-flex items-center gap-1 font-mono text-[#22B3DB] hover:underline"
+                            title="Open in Google Maps"
+                          >
+                            <MapPin size={11} />
+                            {s.photo.latitude.toFixed(5)}, {s.photo.longitude.toFixed(5)}
+                          </a>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
                       <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{fmtDate(s.sampledAt)}</td>
                       <td className="px-5 py-3">
                         {s.photo ? (

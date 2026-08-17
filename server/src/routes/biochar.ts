@@ -126,6 +126,39 @@ router.get('/ledger', requireRole(...STAFF), async (_req, res, next) => {
   } catch (err) { next(err) }
 })
 
+/* Biochar applied per farmer (Admin production-log requirement) */
+router.get('/applied-by-farmer', requireRole(...STAFF), async (_req, res, next) => {
+  try {
+    const apps = await prisma.applicationRecord.findMany({
+      include: {
+        farmer: { select: { farmerId: true, farmName: true, province: true } },
+        batch: { select: { batchNumber: true } },
+      },
+      orderBy: { date: 'desc' },
+    })
+    const byFarmer = new Map<string, {
+      farmerId: string; farmName: string; province: string
+      tonnesApplied: number; applications: number
+      batches: { batchNumber: string; date: Date; weightTonnes: number }[]
+    }>()
+    for (const a of apps) {
+      if (!a.farmer) continue
+      const key = a.farmerId
+      if (!byFarmer.has(key)) {
+        byFarmer.set(key, {
+          farmerId: a.farmer.farmerId, farmName: a.farmer.farmName, province: a.farmer.province,
+          tonnesApplied: 0, applications: 0, batches: [],
+        })
+      }
+      const row = byFarmer.get(key)!
+      row.tonnesApplied = Math.round((row.tonnesApplied + a.weightTonnes) * 1000) / 1000
+      row.applications += 1
+      row.batches.push({ batchNumber: a.batch.batchNumber, date: a.date, weightTonnes: a.weightTonnes })
+    }
+    res.json([...byFarmer.values()].sort((x, y) => y.tonnesApplied - x.tonnesApplied))
+  } catch (err) { next(err) }
+})
+
 router.get('/:id', requireRole(...STAFF), async (req, res, next) => {
   try {
     const batch = await prisma.biocharBatch.findUnique({

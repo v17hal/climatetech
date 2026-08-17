@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
   FlaskConical, Plus, X, AlertTriangle, Camera, CheckCircle2,
-  FileText, MapPin,
+  FileText, MapPin, ChevronRight, Thermometer, Package, User as UserIcon,
 } from 'lucide-react'
 import { Card, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -43,6 +43,53 @@ const STATUS_META: Record<SampleStatus, { dot: string; badge: string; label: str
   },
 }
 
+/* Chain of Custody timeline (Admin #4): who handled the sample at every
+   stage, when, how it was packaged and at what temperature. */
+function CustodyChain({ sample }: { sample: SoilSample }) {
+  const fmt = (d?: string) => (d ? new Date(d).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : null)
+  const stages = [
+    { key: 'sampled', label: 'Sampled in field', who: sample.sampledByName, at: fmt(sample.sampledAt) },
+    { key: 'collected', label: 'Collected from field', who: sample.collectedByName, at: fmt(sample.collectedAt) },
+    { key: 'delivered', label: 'Delivered to lab', who: sample.deliveredByName, at: fmt(sample.deliveredAt) },
+    { key: 'received', label: 'Received by SGS lab', who: sample.labResult ? 'Lab intake' : (sample.labReceivedAt ? 'Lab intake' : undefined), at: fmt(sample.labReceivedAt) },
+    { key: 'results', label: 'Results entered', who: sample.labResult ? 'Lab technician' : undefined, at: fmt(sample.labResult?.enteredAt) },
+  ]
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-xs font-bold text-[#06192C] uppercase tracking-wide">Chain of Custody · {sample.sampleCode}</p>
+      <div className="flex flex-wrap gap-2">
+        {stages.map((st) => {
+          const done = !!st.at
+          return (
+            <div key={st.key} className={cn('flex items-start gap-2 rounded-xl px-3 py-2 border min-w-[180px]',
+              done ? 'bg-white border-[#40BBB9]/30' : 'bg-gray-50 border-gray-100 opacity-60')}>
+              <div className={cn('w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                done ? 'bg-[#40BBB9]/15 text-[#40BBB9]' : 'bg-gray-200 text-gray-400')}>
+                {done ? <CheckCircle2 size={13} /> : <UserIcon size={13} />}
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-[#06192C]">{st.label}</p>
+                <p className="text-[11px] text-gray-500">{st.who ?? '—'}</p>
+                <p className="text-[10px] text-gray-400">{st.at ?? 'Pending'}</p>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      {(sample.packagingType || sample.packagingTempC != null) && (
+        <div className="flex flex-wrap gap-4 text-xs text-gray-600 pt-1">
+          {sample.packagingType && (
+            <span className="inline-flex items-center gap-1.5"><Package size={13} className="text-[#336599]" /> {sample.packagingType}</span>
+          )}
+          {sample.packagingTempC != null && (
+            <span className="inline-flex items-center gap-1.5"><Thermometer size={13} className="text-[#22B3DB]" /> Container/environment temp: <span className="font-semibold">{sample.packagingTempC}°C</span></span>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const STATUS_ORDER: SampleStatus[] = ['sampled', 'lab_received', 'results_entered', 'rejected']
 
 const fmtDate = (d: string) => new Date(d).toISOString().slice(0, 10)
@@ -58,6 +105,7 @@ export default function DCoCPage() {
   const canCreate = role === 'admin' || role === 'field_officer' || role === 'agri_officer'
 
   const [samples, setSamples] = useState<SoilSample[]>([])
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [batches, setBatches] = useState<BiocharBatch[]>([])
   const [farmers, setFarmers] = useState<FarmerOption[]>([])
   const [loading, setLoading] = useState(true)
@@ -110,6 +158,27 @@ export default function DCoCPage() {
     setBatchId('')
     setModalError(null)
     setShowModal(true)
+  }
+
+  /* Admin #1: auto-fill GPS from the device (5-decimal precision). */
+  const captureLocation = () => {
+    if (!('geolocation' in navigator)) {
+      toast.error('Geolocation is not available on this device')
+      return
+    }
+    toast.loading('Getting your location…', { id: 'geo' })
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setPhotoForm((f) => ({
+          ...f,
+          latitude: pos.coords.latitude.toFixed(5),
+          longitude: pos.coords.longitude.toFixed(5),
+        }))
+        toast.success('Location captured', { id: 'geo' })
+      },
+      () => toast.error('Could not get location — enter coordinates manually', { id: 'geo' }),
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
   }
 
   const uploadPhoto = async () => {
@@ -225,8 +294,18 @@ export default function DCoCPage() {
                     <tr><td colSpan={10} className="px-5 py-8 text-center text-xs text-gray-400">No samples logged yet.</td></tr>
                   )}
                   {samples.map((s) => (
-                    <tr key={s.id} className="border-b border-gray-50 hover:bg-[#F4F8F6] transition-colors">
-                      <td className="px-5 py-3 text-xs font-semibold text-[#06192C] whitespace-nowrap">{s.sampleCode}</td>
+                    <React.Fragment key={s.id}>
+                    <tr className="border-b border-gray-50 hover:bg-[#F4F8F6] transition-colors">
+                      <td className="px-5 py-3 text-xs font-semibold text-[#06192C] whitespace-nowrap">
+                        <button
+                          onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
+                          className="inline-flex items-center gap-1.5 hover:text-[#40BBB9] transition-colors cursor-pointer"
+                          title="Show chain of custody"
+                        >
+                          <ChevronRight size={13} className={cn('transition-transform', expandedId === s.id && 'rotate-90')} />
+                          {s.sampleCode}
+                        </button>
+                      </td>
                       <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">
                         {s.batch ? <>{s.batch.batchNumber}<span className="text-gray-300"> · </span>{s.batch.region}</> : '—'}
                       </td>
@@ -288,6 +367,14 @@ export default function DCoCPage() {
                         )}
                       </td>
                     </tr>
+                    {expandedId === s.id && (
+                      <tr className="bg-[#F4F8F6]/60">
+                        <td colSpan={10} className="px-5 py-4">
+                          <CustodyChain sample={s} />
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -320,17 +407,43 @@ export default function DCoCPage() {
                   <p className="text-xs text-gray-400 flex items-center gap-1.5">
                     <Camera size={13} className="text-[#40BBB9]" /> Evidence lock: a geotagged photo is required before a sample can be logged. UTC timestamp is captured automatically.
                   </p>
-                  <div className="flex flex-col gap-1.5">
-                    <label className={labelCls}>Photo (JPEG/PNG/WebP)</label>
-                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif"
-                      onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
-                      className="text-xs text-gray-500 file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-[#40BBB9]/12 file:text-[#40BBB9] file:text-xs file:font-semibold file:cursor-pointer" />
+                  {/* Admin #1: take a photo with the device camera OR upload a file */}
+                  <div className="flex flex-col gap-2">
+                    <label className={labelCls}>Sample Photo</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl border-2 border-dashed border-[#40BBB9]/40 bg-[#40BBB9]/5 cursor-pointer hover:bg-[#40BBB9]/10 transition-colors">
+                        <Camera size={18} className="text-[#40BBB9]" />
+                        <span className="text-xs font-semibold text-[#40BBB9]">Take Photo</span>
+                        <input type="file" accept="image/*" capture="environment" className="hidden"
+                          onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)} />
+                      </label>
+                      <label className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors">
+                        <Plus size={18} className="text-gray-500" />
+                        <span className="text-xs font-semibold text-gray-600">Upload File</span>
+                        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden"
+                          onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)} />
+                      </label>
+                    </div>
+                    {photoFile && (
+                      <p className="text-xs text-[#4a7a1e] flex items-center gap-1.5">
+                        <CheckCircle2 size={12} /> {photoFile.name} ({Math.round(photoFile.size / 1024)} KB)
+                      </p>
+                    )}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input label="Latitude" type="number" placeholder="-26.20227" value={photoForm.latitude}
-                      onChange={(e) => setPhotoForm({ ...photoForm, latitude: e.target.value })} />
-                    <Input label="Longitude" type="number" placeholder="28.04363" value={photoForm.longitude}
-                      onChange={(e) => setPhotoForm({ ...photoForm, longitude: e.target.value })} />
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className={labelCls}>GPS Coordinates</label>
+                      <button type="button" onClick={captureLocation}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#40BBB9] hover:underline cursor-pointer">
+                        <MapPin size={12} /> Use my location
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input label="Latitude" type="number" placeholder="-26.20227" value={photoForm.latitude}
+                        onChange={(e) => setPhotoForm({ ...photoForm, latitude: e.target.value })} />
+                      <Input label="Longitude" type="number" placeholder="28.04363" value={photoForm.longitude}
+                        onChange={(e) => setPhotoForm({ ...photoForm, longitude: e.target.value })} />
+                    </div>
                   </div>
                   <Input label="Device ID" placeholder="FO-TAB-014" value={photoForm.deviceId}
                     onChange={(e) => setPhotoForm({ ...photoForm, deviceId: e.target.value })} />

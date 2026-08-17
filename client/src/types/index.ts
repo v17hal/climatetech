@@ -175,11 +175,33 @@ export interface SoilSample {
   photoId?: string
   photo?: FieldPhoto
   waybillNumber?: string
-  labReceivedAt?: string
+  // Custody chain (Admin #4)
+  sampledByName?: string
   sampledAt: string
+  collectedByName?: string
+  collectedAt?: string
+  deliveredByName?: string
+  deliveredAt?: string
+  labReceivedAt?: string
+  packagingType?: string
+  packagingTempC?: number
   labResult?: LabResult
   batch?: { batchNumber: string; region: string }
   farmer?: { farmerId: string; farmName: string }
+}
+
+export interface BaselineTest {
+  id: string
+  farmerId: string
+  testDate: string
+  soilPH: number
+  organicMatter: number
+  moisture: number
+  soilCarbon: number
+  temperature?: number
+  labName: string
+  testedBy?: string
+  notes?: string
 }
 
 export interface LabResult {

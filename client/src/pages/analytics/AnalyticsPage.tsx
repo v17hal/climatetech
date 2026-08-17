@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { api } from '@/services/api'
 import {
   FileBarChart, Download, FileText, Table2, Filter,
   TrendingUp, Leaf, Users, ShieldCheck, DollarSign,
@@ -19,6 +20,17 @@ import {
   PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis,
   PolarRadiusAxis, Radar,
 } from 'recharts'
+
+interface SoilMetricPoint {
+  month: string
+  soilPH: number | null
+  moisture: number | null
+  temperature: number | null
+}
+interface SoilMetrics {
+  series: SoilMetricPoint[]
+  latest: SoilMetricPoint | null
+}
 
 /* ── report templates ── */
 type ReportType = 'carbon' | 'financial' | 'performance' | 'compliance' | 'custom'
@@ -197,6 +209,15 @@ export default function AnalyticsPage() {
   const [dateTo, setDateTo] = useState('2025-04-23')
   const [previewOpen, setPreviewOpen] = useState(false)
   const [exporting, setExporting] = useState<'pdf' | 'csv' | 'xlsx' | null>(null)
+  const [soil, setSoil] = useState<SoilMetrics | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    api.get<SoilMetrics>('/api/v1/dashboard/soil-metrics')
+      .then((d) => { if (!cancelled) setSoil(d) })
+      .catch(() => { /* keep hidden if API down */ })
+    return () => { cancelled = true }
+  }, [])
 
   const template = TEMPLATES.find((t) => t.id === selectedTemplate)!
 
@@ -344,6 +365,34 @@ export default function AnalyticsPage() {
               </ResponsiveContainer>
             </Card>
           </div>
+
+          {/* Soil Monitoring — pH, moisture, temperature (Field #9) */}
+          {soil && soil.series.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Soil Monitoring — pH, Moisture &amp; Temperature</CardTitle>
+                {soil.latest && (
+                  <div className="flex gap-4 text-xs">
+                    <span className="text-gray-400">Latest pH <span className="font-bold text-[#40BBB9]">{soil.latest.soilPH ?? '—'}</span></span>
+                    <span className="text-gray-400">Moisture <span className="font-bold text-[#22B3DB]">{soil.latest.moisture ?? '—'}%</span></span>
+                    <span className="text-gray-400">Temp <span className="font-bold text-orange-500">{soil.latest.temperature ?? '—'}°C</span></span>
+                  </div>
+                )}
+              </CardHeader>
+              <ResponsiveContainer width="100%" height={240}>
+                <LineChart data={soil.series} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid #f0f0f0' }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="soilPH" name="Soil pH" stroke="#40BBB9" strokeWidth={2.5} dot={false} />
+                  <Line type="monotone" dataKey="moisture" name="Moisture (%)" stroke="#22B3DB" strokeWidth={2.5} dot={false} />
+                  <Line type="monotone" dataKey="temperature" name="Temperature (°C)" stroke="#f97316" strokeWidth={2.5} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </Card>
+          )}
 
           {/* KPI summary table */}
           <Card padding="none">

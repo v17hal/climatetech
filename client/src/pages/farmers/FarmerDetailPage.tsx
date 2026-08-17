@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit2, MapPin, Phone, Mail, Leaf, Droplets, BarChart3, ShieldCheck, Calendar } from 'lucide-react'
+import { ArrowLeft, Edit2, MapPin, Phone, Mail, Leaf, Droplets, BarChart3, ShieldCheck, Calendar, FlaskConical, UserCheck } from 'lucide-react'
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -10,7 +10,7 @@ import { mapApiFarmer } from '@/services/farmersApi'
 import type { ApiFarmer } from '@/services/farmersApi'
 import { mockFarmers, generateCarbonRecords } from '@/data/mockFarmers'
 import { FarmerFormModal } from './components/FarmerFormModal'
-import type { Farmer, CarbonRecord } from '@/types'
+import type { Farmer, CarbonRecord, BaselineTest } from '@/types'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
@@ -30,11 +30,17 @@ export default function FarmerDetailPage() {
   const [live, setLive] = useState(false)
   const [liveFarmer, setLiveFarmer] = useState<Farmer | null>(null)
   const [liveRecords, setLiveRecords] = useState<CarbonRecord[]>([])
+  const [baselineTests, setBaselineTests] = useState<BaselineTest[]>([])
+  const [assignedOfficer, setAssignedOfficer] = useState<{ id: string; name: string } | null>(null)
 
   useEffect(() => {
     if (!id) return
     let cancelled = false
-    api.get<ApiFarmer & { carbonRecords?: CarbonRecord[] }>(`/api/v1/farmers/${id}`)
+    api.get<ApiFarmer & {
+      carbonRecords?: CarbonRecord[]
+      baselineTests?: BaselineTest[]
+      assignedOfficer?: { id: string; name: string } | null
+    }>(`/api/v1/farmers/${id}`)
       .then((data) => {
         if (cancelled) return
         setLiveFarmer(mapApiFarmer(data))
@@ -43,6 +49,8 @@ export default function FarmerDetailPage() {
             (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
           )
         )
+        setBaselineTests(data.baselineTests ?? [])
+        setAssignedOfficer(data.assignedOfficer ?? null)
         setLive(true)
       })
       .catch(() => { /* 404 / API down — fall back to mock lookup */ })
@@ -199,9 +207,57 @@ export default function FarmerDetailPage() {
                 </div>
               </div>
             </div>
+            {/* Delegated field officer (Field #2) */}
+            {assignedOfficer && (
+              <div className="mt-4 pt-3 border-t border-gray-100">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">Delegated Field Officer</p>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#336599]">
+                  <UserCheck size={13} /> {assignedOfficer.name}
+                </span>
+              </div>
+            )}
           </Card>
         </div>
       </div>
+
+      {/* Baseline soil tests (Field #1) — captured before biochar application */}
+      <Card padding="none">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+          <FlaskConical size={15} className="text-[#40BBB9]" />
+          <div>
+            <CardTitle>Baseline Soil Tests</CardTitle>
+            <p className="text-xs text-gray-400 mt-0.5">Soil condition measured before biochar was applied — the reference point for measuring improvement.</p>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-50">
+                {['Test Date', 'Lab', 'Soil pH', 'Organic Matter', 'Moisture', 'Soil Carbon', 'Temp', 'Tested By'].map((h) => (
+                  <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {baselineTests.length === 0 && (
+                <tr><td colSpan={8} className="px-5 py-8 text-center text-xs text-gray-400">No baseline test recorded for this farm yet.</td></tr>
+              )}
+              {baselineTests.map((t) => (
+                <tr key={t.id} className="border-b border-gray-50">
+                  <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{formatDate(t.testDate)}</td>
+                  <td className="px-5 py-3 text-xs text-gray-500">{t.labName}</td>
+                  <td className="px-5 py-3 text-xs font-semibold text-[#06192C]">{t.soilPH}</td>
+                  <td className="px-5 py-3 text-xs text-gray-600">{t.organicMatter}%</td>
+                  <td className="px-5 py-3 text-xs text-gray-600">{t.moisture}%</td>
+                  <td className="px-5 py-3 text-xs text-gray-600">{t.soilCarbon}%</td>
+                  <td className="px-5 py-3 text-xs text-gray-600">{t.temperature != null ? `${t.temperature}°C` : '—'}</td>
+                  <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{t.testedBy ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       {/* Recent carbon readings */}
       <Card padding="none">

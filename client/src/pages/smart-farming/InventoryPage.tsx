@@ -11,7 +11,13 @@ import { api, ApiError } from '@/services/api'
 import { fetchFarmers } from '@/services/farmersApi'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
-type Category = 'seed' | 'fertilizer' | 'pesticide' | 'equipment' | 'other'
+/* CSSA only tracks farm INPUTS used (seed) and FINAL PRODUCE sold
+   (crops, poultry/livestock). No pesticides/fertilizers/equipment. */
+type Category = 'seed' | 'crop' | 'livestock' | 'other'
+
+const CATEGORY_LABELS: Record<Category, string> = {
+  seed: 'Seed used', crop: 'Crop produce', livestock: 'Poultry / livestock', other: 'Other',
+}
 
 interface Item {
   id: string; name: string; category: Category; quantity: number; unit: string;
@@ -19,27 +25,28 @@ interface Item {
 }
 
 const CATEGORY_COLORS: Record<Category, 'green' | 'blue' | 'orange' | 'cyan' | 'gray'> = {
-  seed: 'green', fertilizer: 'blue', pesticide: 'orange', equipment: 'cyan', other: 'gray',
+  seed: 'green', crop: 'cyan', livestock: 'orange', other: 'gray',
 }
 
 const initialItems: Item[] = [
-  { id: '1', name: 'Maize Seed (SC403)', category: 'seed', quantity: 450, unit: 'kg', reorderLevel: 200, costPerUnit: 38, supplier: 'Pioneer Seeds SA', lastUpdated: '2025-04-20' },
-  { id: '2', name: 'LAN Fertilizer', category: 'fertilizer', quantity: 2400, unit: 'kg', reorderLevel: 1000, costPerUnit: 12, supplier: 'Omnia Group', lastUpdated: '2025-04-18' },
-  { id: '3', name: 'Glyphosate Herbicide', category: 'pesticide', quantity: 85, unit: 'L', reorderLevel: 100, costPerUnit: 142, supplier: 'Croplife SA', lastUpdated: '2025-04-15' },
-  { id: '4', name: 'Soybean Seed (DM 6.2)', category: 'seed', quantity: 180, unit: 'kg', reorderLevel: 150, costPerUnit: 55, supplier: 'Sakata SA', lastUpdated: '2025-04-22' },
-  { id: '5', name: 'Urea 46%', category: 'fertilizer', quantity: 3100, unit: 'kg', reorderLevel: 1500, costPerUnit: 9, supplier: 'Sasol Nitro', lastUpdated: '2025-04-10' },
-  { id: '6', name: 'Cypermetrin Pesticide', category: 'pesticide', quantity: 42, unit: 'L', reorderLevel: 50, costPerUnit: 188, supplier: 'Croplife SA', lastUpdated: '2025-04-12' },
-  { id: '7', name: 'Irrigation Pipes (50mm)', category: 'equipment', quantity: 120, unit: 'metres', reorderLevel: 80, costPerUnit: 24, supplier: 'Agriflex SA', lastUpdated: '2025-04-08' },
-  { id: '8', name: 'Wheat Seed (SST 347)', category: 'seed', quantity: 60, unit: 'kg', reorderLevel: 200, costPerUnit: 42, supplier: 'Sensako SA', lastUpdated: '2025-04-19' },
+  // Seed used (inputs)
+  { id: '1', name: 'Maize Seed (SC403) — used', category: 'seed', quantity: 450, unit: 'kg', reorderLevel: 200, costPerUnit: 38, supplier: 'Mwangi Family Farm', lastUpdated: '2025-04-20' },
+  { id: '2', name: 'Soybean Seed (DM 6.2) — used', category: 'seed', quantity: 180, unit: 'kg', reorderLevel: 150, costPerUnit: 55, supplier: 'Nkosi Estate', lastUpdated: '2025-04-22' },
+  // Crop produce (final produce sold)
+  { id: '3', name: 'Maize (harvested)', category: 'crop', quantity: 58, unit: 'tonnes', reorderLevel: 0, costPerUnit: 4200, supplier: 'Mwangi Family Farm', lastUpdated: '2025-05-20' },
+  { id: '4', name: 'Soybeans (harvested)', category: 'crop', quantity: 21, unit: 'tonnes', reorderLevel: 0, costPerUnit: 8600, supplier: 'Banda Rice Paddies', lastUpdated: '2025-05-30' },
+  // Poultry / livestock produce
+  { id: '5', name: 'Broiler chickens', category: 'livestock', quantity: 320, unit: 'birds', reorderLevel: 0, costPerUnit: 95, supplier: 'Mokoena Smallholding', lastUpdated: '2025-05-12' },
+  { id: '6', name: 'Eggs', category: 'livestock', quantity: 140, unit: 'dozen', reorderLevel: 0, costPerUnit: 42, supplier: 'Mokoena Smallholding', lastUpdated: '2025-05-18' },
 ]
 
-const categoryChart = ['seed', 'fertilizer', 'pesticide', 'equipment'].map((c) => ({
-  category: c.charAt(0).toUpperCase() + c.slice(1),
+const categoryChart = (['seed', 'crop', 'livestock'] as Category[]).map((c) => ({
+  category: CATEGORY_LABELS[c],
   items: initialItems.filter((i) => i.category === c).length,
   value: initialItems.filter((i) => i.category === c).reduce((s, i) => s + i.quantity * i.costPerUnit, 0),
 }))
 
-const emptyForm = { name: '', category: 'seed' as Category, quantity: '', unit: 'kg', reorderLevel: '', costPerUnit: '', supplier: '' }
+const emptyForm = { name: '', category: 'crop' as Category, quantity: '', unit: 'kg', reorderLevel: '', costPerUnit: '', supplier: '' }
 
 /** Inventory item as returned by the backend (no cost/supplier fields). */
 interface ApiInventoryItem {
@@ -218,7 +225,7 @@ export default function InventoryPage() {
         <Card>
           <CardHeader><CardTitle>Category Summary</CardTitle></CardHeader>
           <div className="flex flex-col gap-3">
-            {(['seed', 'fertilizer', 'pesticide', 'equipment', 'other'] as Category[]).map((c) => {
+            {(['seed', 'crop', 'livestock', 'other'] as Category[]).map((c) => {
               const count = items.filter((i) => i.category === c).length
               return (
                 <button key={c} onClick={() => setCatFilter(catFilter === c ? 'all' : c)}
@@ -226,9 +233,9 @@ export default function InventoryPage() {
                     catFilter === c ? 'bg-[#40BBB9]/10 border border-[#40BBB9]/30' : 'hover:bg-[#F4F8F6]')}>
                   <div className="flex items-center gap-2">
                     <span className={cn('w-2 h-2 rounded-full',
-                      c === 'seed' ? 'bg-[#98CF59]' : c === 'fertilizer' ? 'bg-[#336599]' :
-                      c === 'pesticide' ? 'bg-orange-400' : c === 'equipment' ? 'bg-[#40BBB9]' : 'bg-gray-400')} />
-                    <span className="text-xs font-semibold text-[#06192C] capitalize">{c}</span>
+                      c === 'seed' ? 'bg-[#98CF59]' : c === 'crop' ? 'bg-[#40BBB9]' :
+                      c === 'livestock' ? 'bg-orange-400' : 'bg-gray-400')} />
+                    <span className="text-xs font-semibold text-[#06192C]">{CATEGORY_LABELS[c]}</span>
                   </div>
                   <span className="text-xs font-bold text-gray-400">{count} items</span>
                 </button>
@@ -251,7 +258,7 @@ export default function InventoryPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-50">
-                {['Item', 'Category', 'Quantity', 'Reorder At', 'Unit Cost', 'Stock Value', 'Supplier', 'Status', ''].map((h) => (
+                {['Item', 'Category', 'Quantity', 'Reorder At', 'Unit Value', 'Total Value', 'Farm', 'Status', ''].map((h) => (
                   <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -262,7 +269,7 @@ export default function InventoryPage() {
                 return (
                   <tr key={item.id} className="border-b border-gray-50 hover:bg-[#F4F8F6] transition-colors group">
                     <td className="px-5 py-3 text-xs font-semibold text-[#06192C]">{item.name}</td>
-                    <td className="px-5 py-3"><Badge variant={CATEGORY_COLORS[item.category]}>{item.category}</Badge></td>
+                    <td className="px-5 py-3"><Badge variant={CATEGORY_COLORS[item.category]}>{CATEGORY_LABELS[item.category]}</Badge></td>
                     <td className="px-5 py-3">
                       <span className={cn('text-xs font-bold', isLow ? 'text-orange-500' : 'text-[#06192C]')}>
                         {item.quantity} {item.unit}
@@ -307,8 +314,8 @@ export default function InventoryPage() {
                   <label className="text-xs font-semibold text-[#06192C]/70 uppercase tracking-wide">Category</label>
                   <select className="bg-[#F4F8F6] border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#40BBB9]/40"
                     value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as Category })}>
-                    {(['seed', 'fertilizer', 'pesticide', 'equipment', 'other'] as Category[]).map((c) => (
-                      <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                    {(['seed', 'crop', 'livestock', 'other'] as Category[]).map((c) => (
+                      <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
                     ))}
                   </select>
                 </div>
@@ -325,8 +332,8 @@ export default function InventoryPage() {
                 <Input label="Reorder Level" type="number" placeholder="200" value={form.reorderLevel} onChange={(e) => setForm({ ...form, reorderLevel: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Input label="Cost per Unit (R)" type="number" placeholder="38" value={form.costPerUnit} onChange={(e) => setForm({ ...form, costPerUnit: e.target.value })} />
-                <Input label="Supplier" placeholder="Pioneer Seeds SA" value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} />
+                <Input label="Value per Unit (R)" type="number" placeholder="4200" value={form.costPerUnit} onChange={(e) => setForm({ ...form, costPerUnit: e.target.value })} />
+                <Input label="Farm" placeholder="Mwangi Family Farm" value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} />
               </div>
               <div className="flex gap-3 pt-2 border-t border-gray-100">
                 <Button variant="outline" onClick={() => setShowModal(false)} className="flex-1">Cancel</Button>

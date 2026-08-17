@@ -233,7 +233,12 @@ function ResultsModal({ sample, onClose, onDone }: {
                 onChange={(e) => setHeavyMetalsPass(e.target.checked)}
                 className="accent-[#40BBB9] w-4 h-4"
               />
-              <span className="text-sm text-gray-600">Heavy metals within EBC/IBI limits</span>
+              <span className="text-sm text-gray-600">
+                Heavy metals within SGS soil-safety limits
+                <span className="block text-xs text-gray-400">
+                  Confirms biochar is free of toxic metal contamination before it can be applied to farmland
+                </span>
+              </span>
             </label>
           </div>
 

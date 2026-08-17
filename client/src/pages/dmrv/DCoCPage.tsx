@@ -39,7 +39,7 @@ const STATUS_META: Record<SampleStatus, { dot: string; badge: string; label: str
   },
   rejected: {
     dot: 'bg-red-500', badge: 'bg-red-100 text-red-700', label: 'Red — Rejected',
-    legend: 'Rejected (failed EBC/IBI quality gate)',
+    legend: 'Rejected (failed SGS lab quality gate)',
   },
 }
 

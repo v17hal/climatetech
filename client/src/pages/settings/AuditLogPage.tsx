@@ -110,7 +110,7 @@ export default function AuditLogPage() {
           </div>
           <div>
             <p className="text-sm font-bold text-[#06192C]">Audit Log</p>
-            <p className="text-xs text-gray-400">All platform actions tracked for compliance and security</p>
+            <p className="text-xs text-gray-400">Tamper-proof record of who did what &amp; when — logins, sample submissions, lab entries, status changes. This is the evidence a carbon auditor (VVB) reviews to trust the data.</p>
           </div>
           <Badge variant={live ? 'green' : 'gray'}>{live ? 'Live data' : 'Demo data'}</Badge>
         </div>

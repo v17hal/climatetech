@@ -116,16 +116,17 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Stats */}
+        {/* Stats — honest framing: no credits issued yet, target-based.
+            Adjust the credit target below to CSSA's published goal. */}
         <div className="grid grid-cols-3 gap-4 relative">
           {[
-            { value: '12,400+', label: 'Farmers Enrolled' },
-            { value: '84k tCO₂', label: 'Carbon Tracked' },
-            { value: '94%', label: 'Compliance Rate' },
+            { value: '450+', label: 'Farmers Enrolled' },
+            { value: 'Pre-Issuance', label: 'Carbon Credits · monitoring underway' },
+            { value: 'dMRV-Ready', label: 'Verra · Puro.earth · Gold Standard' },
           ].map((s) => (
             <div key={s.label} className="bg-white/8 rounded-2xl p-4 border border-white/10">
-              <p className="text-[#98CF59] font-bold text-xl">{s.value}</p>
-              <p className="text-white/40 text-xs mt-1">{s.label}</p>
+              <p className="text-[#98CF59] font-bold text-lg leading-tight">{s.value}</p>
+              <p className="text-white/40 text-xs mt-1 leading-snug">{s.label}</p>
             </div>
           ))}
         </div>
@@ -183,7 +184,7 @@ export default function LoginPage() {
             </div>
 
             <Button type="submit" loading={loading} className="w-full mt-2 py-3">
-              Sign In
+              {loading ? 'Signing in…' : 'Sign In'}
             </Button>
           </form>
 

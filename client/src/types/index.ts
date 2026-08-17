@@ -82,7 +82,7 @@ export interface ForecastDay {
 export interface InventoryItem {
   id: string
   name: string
-  category: 'seed' | 'fertilizer' | 'pesticide' | 'equipment' | 'other'
+  category: 'seed' | 'crop' | 'livestock' | 'other'
   quantity: number
   unit: string
   reorderLevel: number

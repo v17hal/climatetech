@@ -125,7 +125,7 @@ export default function LedgerPage() {
               <p><span className="font-semibold text-[#98CF59]">Gross CO₂e</span> = raw weight × C-org % × 3.67 (carbon → CO₂ conversion)</p>
               <p><span className="font-semibold text-[#22B3DB]">Deductions</span> = truck kilometres × diesel emission factor</p>
               <p><span className="font-semibold text-[#40BBB9]">Net CO₂e</span> = Gross − Deductions</p>
-              <p>Credits only issue for <span className="font-semibold text-white">issuance-eligible</span> batches (passed the EBC/IBI lab quality gate).</p>
+              <p>Credits only issue for <span className="font-semibold text-white">issuance-eligible</span> batches (passed the SGS lab quality gate).</p>
             </div>
           </div>
         </div>

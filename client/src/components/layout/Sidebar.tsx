@@ -84,6 +84,7 @@ export function Sidebar() {
   const isFarmer = role === 'farmer'
   const isLabTech = role === 'lab_technician'
   const isAuditor = role === 'vvb_auditor' || role === 'viewer'
+  const isFieldOfficer = role === 'field_officer' || role === 'agri_officer'
   const isStaff = role === 'admin' || role === 'field_officer' || role === 'agri_officer'
 
   const handleLogout = () => {
@@ -151,12 +152,15 @@ export function Sidebar() {
           <NavItem to="/impact" icon={Sprout} label="My Farm Impact" collapsed={sidebarCollapsed} />
         )}
 
-        {/* Lab technician: secure upload portal */}
-        {(isLabTech || isStaff) && (
+        {/* Lab technician: secure upload portal (lab role only — hidden from
+            admin & field officer per CSSA feedback; revisited at API integration) */}
+        {isLabTech && (
           <NavItem to="/lab" icon={FlaskConical} label="Lab Portal" collapsed={sidebarCollapsed} />
         )}
 
-        {/* dMRV registry — staff + auditors */}
+        {/* dMRV registry — staff + auditors.
+            Field officers get a reduced set: no Carbon Ledger, no Seasonality
+            (admin-managed). Admin & auditors see everything. */}
         {(isStaff || isAuditor) && (
           <>
             {!sidebarCollapsed && (
@@ -165,9 +169,13 @@ export function Sidebar() {
               </p>
             )}
             {sidebarCollapsed && <div className="border-t border-white/10 my-2" />}
-            {dmrvItems.map((item) => (
-              <NavItem key={item.to} {...item} collapsed={sidebarCollapsed} />
-            ))}
+            {dmrvItems
+              .filter((item) =>
+                isFieldOfficer ? !['/dmrv/ledger', '/dmrv/seasonality'].includes(item.to) : true
+              )
+              .map((item) => (
+                <NavItem key={item.to} {...item} collapsed={sidebarCollapsed} />
+              ))}
             {(isStaff || isAuditor) && (
               <NavItem to="/impact" icon={Sprout} label="Farmer Impact" collapsed={sidebarCollapsed} />
             )}
